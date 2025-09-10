@@ -29,9 +29,31 @@ public class McpService {
         }
 
         if (request.getMethod().equals("tools/call")) {
+            Object paramsObj = request.getParams();
+            String city = null;
+            if (paramsObj instanceof Map) {
+                Object argumentsObj = ((Map<?, ?>) paramsObj).get("arguments");
+                if (argumentsObj instanceof Map) {
+                    Object cityObj = ((Map<?, ?>) argumentsObj).get("city");
+                    if (cityObj instanceof String) {
+                        city = (String) cityObj;
+                    }
+                }
+            }
+
+            if (city == null || city.isEmpty()) {
+                return McpResponse.builder()
+                    .id(request.getId())
+                    .error(Map.of(
+                        "code", -32602,
+                        "message", "Invalid params: 'city' is required"
+                    ))
+                    .build();
+            }
+
             return McpResponse.builder()
                 .id(request.getId())
-                .result(createWeatherResult("Seoul"))
+                .result(createWeatherResult(city))
                 .build();
         }
 
