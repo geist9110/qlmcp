@@ -17,7 +17,7 @@ public class McpService {
                 .build();
         }
 
-        if (request.getParams().equals("notifications/initialized")) {
+        if (request.getMethod().equals("notifications/initialized")) {
             return null;
         }
 
