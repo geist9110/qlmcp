@@ -6,7 +6,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ErrorCode {
-    METHOD_NOT_FOUND(-32601, "Method not found");
+    METHOD_NOT_FOUND(-32601, "Method not found"),
+    INVALID_PARAMS(-32602, "Invalid params"),
+    TOOL_NOT_FOUND(-32603, "Tool not found");
 
     private final int code;
     private final String message;
