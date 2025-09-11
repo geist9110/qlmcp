@@ -1,5 +1,6 @@
 package com.qlmcp.backend.service;
 
+import com.qlmcp.backend.config.McpProperties;
 import com.qlmcp.backend.dto.McpRequest;
 import com.qlmcp.backend.dto.McpResponse;
 import com.qlmcp.backend.dto.Method;
@@ -7,17 +8,18 @@ import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class McpService {
+
+    private final McpProperties mcpProperties;
 
     public McpResponse createResponse(McpRequest request) {
         if (request.getMethod() == Method.INITIALIZE) {
-            return McpResponse.builder()
-                .id(request.getId())
-                .result(createInitializeResult())
-                .build();
+            return initialize(request.getId());
         }
 
         if (request.getMethod() == Method.NOTIFICATIONS_INITIALIZED) {
@@ -63,17 +65,22 @@ public class McpService {
         throw new CustomException(ErrorCode.METHOD_NOT_FOUND);
     }
 
-    private Map<String, Object> createInitializeResult() {
-        return Map.of(
-            "protocolVersion", "2025-06-18",
+    private McpResponse initialize(Object requestId) {
+        Map<String, Object> initializeResult = Map.of(
+            "protocolVersion", mcpProperties.getProtocolVersion(),
             "capabilities", Map.of(
                 "tools", Map.of()
             ),
             "serverInfo", Map.of(
-                "name", "qlmcp-server",
-                "version", "1.0.0"
+                "name", mcpProperties.getServerName(),
+                "version", mcpProperties.getServerVersion()
             )
         );
+
+        return McpResponse.builder()
+            .id(requestId)
+            .result(initializeResult)
+            .build();
     }
 
     private Map<String, Object> createToolsListResult() {

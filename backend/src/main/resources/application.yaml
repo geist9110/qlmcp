@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: backend
+
+ai:
+  mcp:
+    protocolVersion: 2025-06-18
+    serverName: qlmcp
+    serverVersion: 1.0.0
