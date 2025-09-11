@@ -8,7 +8,8 @@ import lombok.Getter;
 public enum ErrorCode {
     METHOD_NOT_FOUND(-32601, "Method not found"),
     INVALID_PARAMS(-32602, "Invalid params"),
-    TOOL_NOT_FOUND(-32603, "Tool not found");
+    TOOL_NOT_FOUND(-32603, "Tool not found"),
+    SCHEMA_PARSING_ERROR(-32604, "Schema parsing error");
 
     private final int code;
     private final String message;

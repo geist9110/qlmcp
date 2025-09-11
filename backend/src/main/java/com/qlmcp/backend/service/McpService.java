@@ -1,6 +1,7 @@
 package com.qlmcp.backend.service;
 
 import com.qlmcp.backend.config.McpProperties;
+import com.qlmcp.backend.config.ToolRegistry;
 import com.qlmcp.backend.dto.McpRequest;
 import com.qlmcp.backend.dto.McpResponse;
 import com.qlmcp.backend.dto.Method;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 public class McpService {
 
     private final McpProperties mcpProperties;
+    private final ToolRegistry toolRegistry;
     private final GetWeatherTool getWeatherTool;
 
     public McpResponse createResponse(McpRequest request) {
@@ -58,28 +60,9 @@ public class McpService {
     }
 
     private McpResponse toolList(Object requestId) {
-        Map<String, Object> toolListResult = Map.of(
-            "tools", List.of(
-                Map.of(
-                    "name", "get_weather",
-                    "description", "Get weather information",
-                    "inputSchema", Map.of(
-                        "type", "object",
-                        "properties", Map.of(
-                            "city", Map.of(
-                                "type", "string",
-                                "description", "City name"
-                            )
-                        ),
-                        "required", List.of("city")
-                    )
-                )
-            )
-        );
-
         return McpResponse.builder()
             .id(requestId)
-            .result(toolListResult)
+            .result(toolRegistry.getToolsList())
             .build();
     }
 
