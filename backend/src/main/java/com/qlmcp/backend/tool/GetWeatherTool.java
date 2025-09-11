@@ -3,6 +3,8 @@ package com.qlmcp.backend.tool;
 import com.qlmcp.backend.config.ToolMeta;
 import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
+import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @ToolMeta(
@@ -24,7 +26,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class GetWeatherTool {
 
-    public String getWeather(String city) {
+    public Map<String, Object> call(Map<?, ?> arguments) {
+        return Map.of(
+            "content", List.of(
+                Map.of(
+                    "type", "text",
+                    "text", getWeather((String) arguments.get("city"))
+                )
+            ),
+            "isError", false
+        );
+    }
+
+    private String getWeather(String city) {
         if (city == null || city.isEmpty()) {
             throw new CustomException(ErrorCode.INVALID_PARAMS);
         }

@@ -8,7 +8,6 @@ import com.qlmcp.backend.dto.Method;
 import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
 import com.qlmcp.backend.tool.GetWeatherTool;
-import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -80,17 +79,7 @@ public class McpService {
         Map<?, ?> arguments = parseArguments(params);
 
         if (toolName.equals("get_weather")) {
-            String city = (String) arguments.get("city");
-
-            return Map.of(
-                "content", List.of(
-                    Map.of(
-                        "type", "text",
-                        "text", getWeatherTool.getWeather(city)
-                    )
-                ),
-                "isError", false
-            );
+            return getWeatherTool.call(arguments);
         }
 
         throw new CustomException(ErrorCode.TOOL_NOT_FOUND);
