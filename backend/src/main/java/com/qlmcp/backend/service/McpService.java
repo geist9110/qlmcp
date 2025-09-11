@@ -3,6 +3,8 @@ package com.qlmcp.backend.service;
 import com.qlmcp.backend.dto.McpRequest;
 import com.qlmcp.backend.dto.McpResponse;
 import com.qlmcp.backend.dto.Method;
+import com.qlmcp.backend.exception.CustomException;
+import com.qlmcp.backend.exception.ErrorCode;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
@@ -58,13 +60,7 @@ public class McpService {
                 .build();
         }
 
-        return McpResponse.builder()
-            .id(request.getId())
-            .error(Map.of(
-                "code", -32601,
-                "message", "Method not found: " + request.getMethod()
-            ))
-            .build();
+        throw new CustomException(ErrorCode.METHOD_NOT_FOUND);
     }
 
     private Map<String, Object> createInitializeResult() {

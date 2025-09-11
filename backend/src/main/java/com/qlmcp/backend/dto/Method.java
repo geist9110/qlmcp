@@ -2,6 +2,8 @@ package com.qlmcp.backend.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.qlmcp.backend.exception.CustomException;
+import com.qlmcp.backend.exception.ErrorCode;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,7 +27,7 @@ public enum Method {
         Method method = VALUE_MAP.get(value);
 
         if (method == null) {
-            throw new IllegalArgumentException("Unknown method: " + value);
+            throw new CustomException(ErrorCode.METHOD_NOT_FOUND);
         }
 
         return method;
