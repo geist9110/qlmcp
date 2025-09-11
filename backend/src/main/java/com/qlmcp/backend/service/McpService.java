@@ -2,6 +2,7 @@ package com.qlmcp.backend.service;
 
 import com.qlmcp.backend.dto.McpRequest;
 import com.qlmcp.backend.dto.McpResponse;
+import com.qlmcp.backend.dto.Method;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
@@ -10,25 +11,25 @@ import org.springframework.stereotype.Service;
 public class McpService {
 
     public McpResponse createResponse(McpRequest request) {
-        if (request.getMethod().equals("initialize")) {
+        if (request.getMethod() == Method.INITIALIZE) {
             return McpResponse.builder()
                 .id(request.getId())
                 .result(createInitializeResult())
                 .build();
         }
 
-        if (request.getMethod().equals("notifications/initialized")) {
+        if (request.getMethod() == Method.NOTIFICATIONS_INITIALIZED) {
             return null;
         }
 
-        if (request.getMethod().equals("tools/list")) {
+        if (request.getMethod() == Method.TOOLS_LIST) {
             return McpResponse.builder()
                 .id(request.getId())
                 .result(createToolsListResult())
                 .build();
         }
 
-        if (request.getMethod().equals("tools/call")) {
+        if (request.getMethod() == Method.TOOLS_CALL) {
             Object paramsObj = request.getParams();
             String city = null;
             if (paramsObj instanceof Map) {

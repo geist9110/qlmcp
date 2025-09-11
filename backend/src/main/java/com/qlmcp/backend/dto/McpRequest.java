@@ -8,7 +8,7 @@ public class McpRequest {
 
     private String jsonrpc = "2.0";
     private Object id;
-    private String method;
+    private Method method;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Object params;
