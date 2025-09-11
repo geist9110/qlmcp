@@ -27,10 +27,7 @@ public class McpService {
         }
 
         if (request.getMethod() == Method.TOOLS_LIST) {
-            return McpResponse.builder()
-                .id(request.getId())
-                .result(createToolsListResult())
-                .build();
+            return toolList(request.getId());
         }
 
         if (request.getMethod() == Method.TOOLS_CALL) {
@@ -83,8 +80,8 @@ public class McpService {
             .build();
     }
 
-    private Map<String, Object> createToolsListResult() {
-        return Map.of(
+    private McpResponse toolList(Object requestId) {
+        Map<String, Object> toolListResult = Map.of(
             "tools", List.of(
                 Map.of(
                     "name", "get_weather",
@@ -102,6 +99,11 @@ public class McpService {
                 )
             )
         );
+
+        return McpResponse.builder()
+            .id(requestId)
+            .result(toolListResult)
+            .build();
     }
 
     private Map<String, Object> createWeatherResult(String city) {
