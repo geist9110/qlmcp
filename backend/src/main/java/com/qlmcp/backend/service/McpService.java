@@ -66,20 +66,24 @@ public class McpService {
     }
 
     private McpResponse callTools(McpRequest request) {
-        Map<String, Object> toolResult = switchingTools(request.getParams());
-
         return McpResponse.builder()
             .id(request.getId())
-            .result(toolResult)
+            .result(switchingTools(request.getParams()))
             .build();
     }
 
     private Map<String, Object> switchingTools(Object params) {
-        String toolName = (String) ((Map<?, ?>) params).get("name");
         Map<?, ?> arguments = parseArguments(params);
 
-        if (toolName.equals("get_weather")) {
-            return getWeatherTool.call(arguments);
+        Object tool = toolRegistry.getToolByName((String) ((Map<?, ?>) params).get("name"));
+
+        if (tool != null) {
+            try {
+                var method = tool.getClass().getMethod("call", Map.class);
+                return (Map<String, Object>) method.invoke(tool, arguments);
+            } catch (Exception e) {
+                throw new CustomException(ErrorCode.TOOL_EXECUTION_ERROR);
+            }
         }
 
         throw new CustomException(ErrorCode.TOOL_NOT_FOUND);

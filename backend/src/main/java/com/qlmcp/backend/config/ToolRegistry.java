@@ -5,6 +5,7 @@ import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,21 @@ public class ToolRegistry {
 
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
+
+    public Object getToolByName(String name) {
+        Map<String, Object> toolMap = applicationContext
+            .getBeansWithAnnotation(ToolMeta.class)
+            .values()
+            .stream()
+            .collect(
+                Collectors.toMap(
+                    bean -> bean.getClass().getAnnotation(ToolMeta.class).name(),
+                    bean -> bean
+                )
+            );
+
+        return toolMap.get(name);
+    }
 
     public Map<String, List<Map<String, Object>>> getToolsList() {
         List<Map<String, Object>> toolList = applicationContext
