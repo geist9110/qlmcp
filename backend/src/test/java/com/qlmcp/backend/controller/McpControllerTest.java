@@ -209,4 +209,82 @@ class McpControllerTest {
                 )
             ));
     }
+
+    @Test
+    @DisplayName("MCP Tools List 요청 처리")
+    void handleMcp_toolsList() throws Exception {
+        // given
+        String expectResponseBody = """
+            {
+              "jsonrpc": "2.0",
+              "id": 1,
+              "result": {
+                "tools": [
+                  {
+                    "name": "get_weather",
+                    "title": "Weather Information Provider",
+                    "description": "Get current weather information for a location",
+                    "inputSchema": {
+                      "type": "object",
+                      "properties": {
+                        "location": {
+                          "type": "string",
+                          "description": "City name or zip code"
+                        }
+                      },
+                      "required": ["location"]
+                    }
+                  }
+                ],
+                "nextCursor": "next-page-cursor"
+              }
+            }
+            """;
+
+        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
+            .thenReturn(objectMapper.readValue(expectResponseBody, McpResponse.class));
+
+        String requestBody = """
+            {
+              "jsonrpc": "2.0",
+              "id": 1,
+              "method": "tools/list",
+              "params": {
+                "cursor": "optional-cursor-value"
+              }
+            }
+            """;
+
+        // when & then
+        mockMvc.perform(post("/mcp")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+            .andExpect(status().isOk())
+            .andDo(document("mcp-tools-list",
+                requestFields(
+                    fieldWithPath("jsonrpc").description("JSON-RPC 프로토콜 버전 (예: '2.0')"),
+                    fieldWithPath("id").description("요청 식별자"),
+                    fieldWithPath("method").description("호출 메서드명 (예: 'tools/list')"),
+                    fieldWithPath("params.cursor").description("페이지네이션을 위한 커서 (Optional)")
+                ),
+                responseFields(
+                    fieldWithPath("jsonrpc").description("JSON-RPC 프로토콜 버전 (예: '2.0')"),
+                    fieldWithPath("id").description("요청 식별자"),
+                    fieldWithPath("result.tools[].name").description("툴 이름"),
+                    fieldWithPath("result.tools[].title").description("툴 표시 이름"),
+                    fieldWithPath("result.tools[].description").description("툴 설명"),
+                    fieldWithPath("result.tools[].inputSchema.type").description(
+                        "툴 입력 스키마 타입 (예: 'object')"),
+                    fieldWithPath(
+                        "result.tools[].inputSchema.properties.location.type").description(
+                        "입력 파라미터 타입 (예: 'string')"),
+                    fieldWithPath(
+                        "result.tools[].inputSchema.properties.location.description").description(
+                        "입력 파라미터 설명"),
+                    fieldWithPath("result.tools[].inputSchema.required[]").description(
+                        "필수 입력 파라미터 목록"),
+                    fieldWithPath("result.nextCursor").description("다음 페이지를 위한 커서 (Optional)")
+                )
+            ));
+    }
 }
