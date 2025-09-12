@@ -33,7 +33,7 @@ class McpControllerTest {
     private McpService mcpService;
 
     @Test
-    @DisplayName("MCP Initialize 요청 처리 - 성공")
+    @DisplayName("MCP Initialize 요청 처리")
     void handleMcp_initialize() throws Exception {
         // given
         String expectResponseBody = """
@@ -131,6 +131,33 @@ class McpControllerTest {
                     fieldWithPath("result.serverInfo.title").description("서버 표시 이름"),
                     fieldWithPath("result.serverInfo.version").description("서버 버전"),
                     fieldWithPath("result.instructions").description("클라이언트용 안내문 (Optional)")
+                )
+            ));
+    }
+
+    @Test
+    @DisplayName("MCP Notification 요청 처리")
+    void handleMcp_notificationsInitialized() throws Exception {
+        // given
+        String requestBody = """
+            {
+              "jsonrpc": "2.0",
+              "method": "notifications/initialized"
+            }
+            """;
+
+        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
+            .thenReturn(null);
+
+        // when & then
+        mockMvc.perform(post("/mcp")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+            .andExpect(status().isOk())
+            .andDo(document("mcp-notifications-initialized",
+                requestFields(
+                    fieldWithPath("jsonrpc").description("JSON-RPC 프로토콜 버전 (예: '2.0')"),
+                    fieldWithPath("method").description("호출 메서드명 (예: 'notificationsInitialized')")
                 )
             ));
     }
