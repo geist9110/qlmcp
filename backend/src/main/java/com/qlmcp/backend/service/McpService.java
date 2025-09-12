@@ -1,114 +1,100 @@
 package com.qlmcp.backend.service;
 
+import com.qlmcp.backend.config.McpProperties;
+import com.qlmcp.backend.config.ToolRegistry;
 import com.qlmcp.backend.dto.McpRequest;
 import com.qlmcp.backend.dto.McpResponse;
-import java.util.List;
+import com.qlmcp.backend.dto.Method;
+import com.qlmcp.backend.exception.CustomException;
+import com.qlmcp.backend.exception.ErrorCode;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class McpService {
 
+    private final McpProperties mcpProperties;
+    private final ToolRegistry toolRegistry;
+
     public McpResponse createResponse(McpRequest request) {
-        if (request.getMethod().equals("initialize")) {
-            return McpResponse.builder()
-                .id(request.getId())
-                .result(createInitializeResult())
-                .build();
+        if (request.getMethod() == Method.INITIALIZE) {
+            return initialize(request.getId());
         }
 
-        if (request.getMethod().equals("notifications/initialized")) {
+        if (request.getMethod() == Method.NOTIFICATIONS_INITIALIZED) {
             return null;
         }
 
-        if (request.getMethod().equals("tools/list")) {
-            return McpResponse.builder()
-                .id(request.getId())
-                .result(createToolsListResult())
-                .build();
+        if (request.getMethod() == Method.TOOLS_LIST) {
+            return toolList(request.getId());
         }
 
-        if (request.getMethod().equals("tools/call")) {
-            Object paramsObj = request.getParams();
-            String city = null;
-            if (paramsObj instanceof Map) {
-                Object argumentsObj = ((Map<?, ?>) paramsObj).get("arguments");
-                if (argumentsObj instanceof Map) {
-                    Object cityObj = ((Map<?, ?>) argumentsObj).get("city");
-                    if (cityObj instanceof String) {
-                        city = (String) cityObj;
-                    }
-                }
-            }
-
-            if (city == null || city.isEmpty()) {
-                return McpResponse.builder()
-                    .id(request.getId())
-                    .error(Map.of(
-                        "code", -32602,
-                        "message", "Invalid params: 'city' is required"
-                    ))
-                    .build();
-            }
-
-            return McpResponse.builder()
-                .id(request.getId())
-                .result(createWeatherResult(city))
-                .build();
+        if (request.getMethod() == Method.TOOLS_CALL) {
+            return callTools(request);
         }
 
-        return McpResponse.builder()
-            .id(request.getId())
-            .error(Map.of(
-                "code", -32601,
-                "message", "Method not found: " + request.getMethod()
-            ))
-            .build();
+        throw new CustomException(ErrorCode.METHOD_NOT_FOUND);
     }
 
-    private Map<String, Object> createInitializeResult() {
-        return Map.of(
-            "protocolVersion", "2025-06-18",
+    private McpResponse initialize(Object requestId) {
+        Map<String, Object> initializeResult = Map.of(
+            "protocolVersion", mcpProperties.getProtocolVersion(),
             "capabilities", Map.of(
                 "tools", Map.of()
             ),
             "serverInfo", Map.of(
-                "name", "qlmcp-server",
-                "version", "1.0.0"
+                "name", mcpProperties.getServerName(),
+                "version", mcpProperties.getServerVersion()
             )
         );
+
+        return McpResponse.builder()
+            .id(requestId)
+            .result(initializeResult)
+            .build();
     }
 
-    private Map<String, Object> createToolsListResult() {
-        return Map.of(
-            "tools", List.of(
-                Map.of(
-                    "name", "get_weather",
-                    "description", "Get weather information",
-                    "inputSchema", Map.of(
-                        "type", "object",
-                        "properties", Map.of(
-                            "city", Map.of(
-                                "type", "string",
-                                "description", "City name"
-                            )
-                        ),
-                        "required", List.of("city")
-                    )
-                )
-            )
-        );
+    private McpResponse toolList(Object requestId) {
+        return McpResponse.builder()
+            .id(requestId)
+            .result(toolRegistry.getToolsList())
+            .build();
     }
 
-    private Map<String, Object> createWeatherResult(String city) {
-        return Map.of(
-            "content", List.of(
-                Map.of(
-                    "type", "text",
-                    "text", String.format("Sunnyday in %s", city)
-                )
-            ),
-            "isError", false
-        );
+    private McpResponse callTools(McpRequest request) {
+        return McpResponse.builder()
+            .id(request.getId())
+            .result(switchingTools(request.getParams()))
+            .build();
+    }
+
+    private Map<String, Object> switchingTools(Object params) {
+        Map<?, ?> arguments = parseArguments(params);
+
+        Object tool = toolRegistry.getToolByName((String) ((Map<?, ?>) params).get("name"));
+
+        if (tool != null) {
+            try {
+                var method = tool.getClass().getMethod("call", Map.class);
+                return (Map<String, Object>) method.invoke(tool, arguments);
+            } catch (Exception e) {
+                throw new CustomException(ErrorCode.TOOL_EXECUTION_ERROR);
+            }
+        }
+
+        throw new CustomException(ErrorCode.TOOL_NOT_FOUND);
+    }
+
+    private Map<?, ?> parseArguments(Object params) {
+        if (params instanceof Map) {
+            Object argumentsObj = ((Map<?, ?>) params).get("arguments");
+            if (argumentsObj instanceof Map) {
+                return (Map<?, ?>) argumentsObj;
+            }
+        }
+
+        throw new CustomException(ErrorCode.INVALID_PARAMS);
     }
 }
