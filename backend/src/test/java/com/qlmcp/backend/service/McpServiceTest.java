@@ -100,4 +100,36 @@ class McpServiceTest {
             () -> assertTrue(result.containsKey("tools"))
         );
     }
+
+    @Test
+    @DisplayName("createResponse - TOOLS_CALL")
+    void createResponse_toolsCall() {
+        // given
+        Object requestId = "test-id";
+        Map<String, Object> params = Map.of("name", "test-tool",
+            "arguments", Map.of("param1", "value1"));
+        Map<String, Object> expectResult = Map.of("result", "success");
+
+        McpRequest request = mock(McpRequest.class);
+        when(request.getMethod()).thenReturn(Method.TOOLS_CALL);
+        when(request.getId()).thenReturn(requestId);
+        when(request.getParams()).thenReturn(params);
+        when(toolRegistry.getToolByName("test-tool")).thenReturn(new Object() {
+            public Map<String, Object> call(Map<String, Object> args) {
+                return expectResult;
+            }
+        });
+
+        // when
+        McpResponse actual = mcpService.createResponse(request);
+
+        // then
+        Map<String, Object> result = (Map<String, Object>) actual.getResult();
+
+        assertAll(
+            () -> assertNotNull(actual),
+            () -> assertEquals(requestId, actual.getId()),
+            () -> assertEquals(expectResult, result)
+        );
+    }
 }
