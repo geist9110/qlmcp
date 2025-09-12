@@ -161,4 +161,52 @@ class McpControllerTest {
                 )
             ));
     }
+
+    @Test
+    @DisplayName("MCP Error 응답 처리")
+    void handleMcp_error() throws Exception {
+        // given
+        String expectResponseBody = """
+            {
+              "jsonrpc": "2.0",
+              "id": 2,
+              "error": {
+                "code": -32601,
+                "message": "Method not found"
+              }
+            }
+            """;
+
+        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
+            .thenReturn(objectMapper.readValue(expectResponseBody, McpResponse.class));
+
+        String requestBody = """
+            {
+              "jsonrpc": "2.0",
+              "id": 2,
+              "method": "unknownMethod",
+              "params": {}
+            }
+            """;
+
+        // when & then
+        mockMvc.perform(post("/mcp")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+            .andExpect(status().isInternalServerError())
+            .andDo(document("mcp-error",
+                requestFields(
+                    fieldWithPath("jsonrpc").description("JSON-RPC 프로토콜 버전 (예: '2.0')"),
+                    fieldWithPath("id").description("요청 식별자"),
+                    fieldWithPath("method").description("호출 메서드명 (예: 'unknownMethod')"),
+                    fieldWithPath("params").description("메서드 매개변수 (비어있을 수 있음)")
+                ),
+                responseFields(
+                    fieldWithPath("jsonrpc").description("JSON-RPC 프로토콜 버전 (예: '2.0')"),
+                    fieldWithPath("id").description("요청 식별자"),
+                    fieldWithPath("error.code").description("에러 코드"),
+                    fieldWithPath("error.message").description("에러 메시지")
+                )
+            ));
+    }
 }
