@@ -287,4 +287,63 @@ class McpControllerTest {
                 )
             ));
     }
+
+    @Test
+    @DisplayName("MCP Tools Call 요청 처리")
+    void handleMcp_toolsCall() throws Exception {
+        // given
+        String expectResponseBody = """
+                {
+                  "jsonrpc": "2.0",
+                  "id": 2,
+                  "result": {
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Current weather in New York:\\nTemperature: 72°F\\nConditions: Partly cloudy"
+                      }
+                    ],
+                    "isError": false
+                  }
+                }
+            """;
+
+        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
+            .thenReturn(objectMapper.readValue(expectResponseBody, McpResponse.class));
+
+        String requestBody = """
+                {
+                  "jsonrpc": "2.0",
+                  "id": 2,
+                  "method": "tools/call",
+                  "params": {
+                    "name": "get_weather",
+                    "arguments": {
+                      "location": "New York"
+                    }
+                  }
+                }
+            """;
+
+        // when & then
+        mockMvc.perform(post("/mcp")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+            .andExpect(status().isOk())
+            .andDo(document("mcp-tools-call",
+                requestFields(
+                    fieldWithPath("jsonrpc").description("JSON-RPC 프로토콜 버전 (예: '2.0')"),
+                    fieldWithPath("id").description("요청 식별자"),
+                    fieldWithPath("method").description("호출 메서드명 (예: 'tools/call')"),
+                    fieldWithPath("params.name").description("호출할 툴 이름"),
+                    fieldWithPath("params.arguments.location").description("툴에 전달할 인자")
+                ),
+                responseFields(
+                    fieldWithPath("jsonrpc").description("JSON-RPC 프로토콜 버전 (예: '2.0')"),
+                    fieldWithPath("id").description("요청 식별자"),
+                    fieldWithPath("result.content[].type").description("응답 콘텐츠 타입 (예: 'text')"),
+                    fieldWithPath("result.content[].text").description("응답 텍스트 내용"),
+                    fieldWithPath("result.isError").description("툴 실행 오류 여부")
+                )));
+    }
 }
