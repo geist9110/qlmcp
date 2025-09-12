@@ -3,6 +3,7 @@ package com.qlmcp.backend.service;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -58,5 +59,19 @@ class McpServiceTest {
             () -> assertEquals("test-server", serverInfo.get("name")),
             () -> assertEquals("0.1.0", serverInfo.get("version"))
         );
+    }
+
+    @Test
+    @DisplayName("createResponse - NOTIFICATIONS_INITIALIZED")
+    void createResponse_notificationsInitialized() {
+        // given
+        McpRequest request = mock(McpRequest.class);
+        when(request.getMethod()).thenReturn(Method.NOTIFICATIONS_INITIALIZED);
+
+        // when
+        McpResponse actual = mcpService.createResponse(request);
+
+        // then
+        assertNull(actual);
     }
 }
