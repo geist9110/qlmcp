@@ -7,7 +7,6 @@ import com.qlmcp.backend.dto.McpResponse;
 import com.qlmcp.backend.dto.Method;
 import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
-import com.qlmcp.backend.tool.GetWeatherTool;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,6 @@ public class McpService {
 
     private final McpProperties mcpProperties;
     private final ToolRegistry toolRegistry;
-    private final GetWeatherTool getWeatherTool;
 
     public McpResponse createResponse(McpRequest request) {
         if (request.getMethod() == Method.INITIALIZE) {
