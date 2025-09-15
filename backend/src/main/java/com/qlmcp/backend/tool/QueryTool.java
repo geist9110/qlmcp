@@ -1,23 +1,52 @@
-package com.qlmcp.backend.service;
+package com.qlmcp.backend.tool;
 
 import com.qlmcp.backend.config.AiProperties;
+import com.qlmcp.backend.config.ToolMeta;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-@Service
+@ToolMeta(
+    name = "query",
+    description = "여러 MCP 툴을 통해 질문에 답변합니다.",
+    inputSchema = """
+            {
+                "type": "object",
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "description": "질문하고자 하는 내용"
+                    }
+                },
+                "required": ["question"]
+            }
+        """
+)
+@Component
 @RequiredArgsConstructor
-public class AiService {
+public class QueryTool {
 
     private final AiProperties aiProperties;
     private RestClient restClient = RestClient.create();
 
-    public String sendChat(String message) {
+    public Map<String, Object> call(Map<?, ?> arguments) {
+        return Map.of(
+            "content", List.of(
+                Map.of(
+                    "type", "text",
+                    "text", sendChat((String) arguments.get("question"))
+                )
+            ),
+            "isError", false
+        );
+    }
+
+    private String sendChat(String message) {
         String apiUrl = aiProperties.getBaseUrl() + "/" + aiProperties.getModel() + ":"
             + aiProperties.getType();
 
