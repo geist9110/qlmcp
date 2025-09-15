@@ -13,14 +13,14 @@ import org.springframework.web.client.RestClient;
 
 @ToolMeta(
     name = "query",
-    description = "여러 MCP 툴을 통해 질문에 답변합니다.",
+    description = "Query tool is used to answer questions related to QL MCP.",
     inputSchema = """
             {
                 "type": "object",
                 "properties": {
                     "question": {
                         "type": "string",
-                        "description": "질문하고자 하는 내용"
+                        "description": "The question to be answered."
                     }
                 },
                 "required": ["question"]

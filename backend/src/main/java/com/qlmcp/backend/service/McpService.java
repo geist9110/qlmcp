@@ -7,6 +7,7 @@ import com.qlmcp.backend.dto.McpResponse;
 import com.qlmcp.backend.dto.Method;
 import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -39,16 +40,16 @@ public class McpService {
     }
 
     private McpResponse initialize(Object requestId) {
-        Map<String, Object> initializeResult = Map.of(
-            "protocolVersion", mcpProperties.getProtocolVersion(),
-            "capabilities", Map.of(
-                "tools", Map.of()
-            ),
-            "serverInfo", Map.of(
-                "name", mcpProperties.getServerName(),
-                "version", mcpProperties.getServerVersion()
-            )
-        );
+        Map<String, Object> initializeResult = new HashMap<>();
+        initializeResult.put("protocolVersion", mcpProperties.getProtocolVersion());
+        initializeResult.put("capabilities", Map.of(
+            "tools", Map.of()
+        ));
+        initializeResult.put("serverInfo", Map.of(
+            "name", mcpProperties.getServerName(),
+            "version", mcpProperties.getServerVersion()
+        ));
+        initializeResult.put("instructions", "Optional instructions for the client");
 
         return McpResponse.builder()
             .id(requestId)
