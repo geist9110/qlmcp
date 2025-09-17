@@ -63,8 +63,8 @@ public class QueryTool {
             "contents",
             List.of(
                 Map.of(
-                    "parts",
-                    List.of(Map.of("text", message))
+                    "role", "user",
+                    "parts", List.of(Map.of("text", message))
                 )
             )
         );
@@ -74,6 +74,36 @@ public class QueryTool {
             Map.of(
                 "thinkingConfig",
                 Map.of("thinkingBudget", 0)
+            )
+        );
+
+        requestBody.put(
+            "tools",
+            List.of(
+                Map.of(
+                    "functionDeclarations",
+                    List.of(
+                        Map.of(
+                            "name", "get_nowcast_observation",
+                            "description",
+                            "특정 위경도의 날씨 정보를 가져옵니다. Args: lon (float): 경도 값 lat (float): 위도 값",
+                            "parameters", Map.of(
+                                "type", "object",
+                                "properties", Map.of(
+                                    "lon", Map.of(
+                                        "title", "Lon",
+                                        "type", "number"
+                                    ),
+                                    "lat", Map.of(
+                                        "title", "Lat",
+                                        "type", "number"
+                                    )
+                                ),
+                                "required", List.of("lon", "lat")
+                            )
+                        )
+                    )
+                )
             )
         );
 
