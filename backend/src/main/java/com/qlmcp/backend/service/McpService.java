@@ -4,7 +4,6 @@ import com.qlmcp.backend.config.McpProperties;
 import com.qlmcp.backend.config.ToolRegistry;
 import com.qlmcp.backend.dto.JsonRpcRequest;
 import com.qlmcp.backend.dto.JsonRpcResponse;
-import com.qlmcp.backend.dto.Method;
 import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
 import com.qlmcp.backend.tool.ToolInterface;
@@ -20,27 +19,7 @@ public class McpService {
     private final McpProperties mcpProperties;
     private final ToolRegistry toolRegistry;
 
-    public JsonRpcResponse createResponse(JsonRpcRequest request) {
-        if (request.getMethod() == Method.INITIALIZE) {
-            return initialize(request.getId());
-        }
-
-        if (request.getMethod() == Method.NOTIFICATIONS_INITIALIZED) {
-            return null;
-        }
-
-        if (request.getMethod() == Method.TOOLS_LIST) {
-            return toolList(request.getId());
-        }
-
-        if (request.getMethod() == Method.TOOLS_CALL) {
-            return callTools(request);
-        }
-
-        throw new CustomException(ErrorCode.METHOD_NOT_FOUND);
-    }
-
-    private JsonRpcResponse initialize(Object requestId) {
+    public JsonRpcResponse initialize(Object requestId) {
         Map<String, Object> initializeResult = new HashMap<>();
         initializeResult.put("protocolVersion", mcpProperties.getProtocolVersion());
         initializeResult.put("capabilities", Map.of(
@@ -58,14 +37,14 @@ public class McpService {
             .build();
     }
 
-    private JsonRpcResponse toolList(Object requestId) {
+    public JsonRpcResponse toolList(Object requestId) {
         return JsonRpcResponse.builder()
             .id(requestId)
             .result(Map.of("tools", toolRegistry.getToolInformationList()))
             .build();
     }
 
-    private JsonRpcResponse callTools(JsonRpcRequest request) {
+    public JsonRpcResponse callTools(JsonRpcRequest request) {
         return JsonRpcResponse.builder()
             .id(request.getId())
             .result(switchingTools(request.getParams()))

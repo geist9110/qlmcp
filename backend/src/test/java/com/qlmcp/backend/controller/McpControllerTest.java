@@ -65,9 +65,8 @@ class McpControllerTest {
             }
             """;
 
-        Mockito.when(mcpService.createResponse(any(JsonRpcRequest.class)))
-            .thenReturn(objectMapper
-                .readValue(expectResponseBody, JsonRpcResponse.class));
+        Mockito.when(mcpService.initialize(1))
+            .thenReturn(objectMapper.readValue(expectResponseBody, JsonRpcResponse.class));
 
         String requestBody = """
             {
@@ -146,9 +145,6 @@ class McpControllerTest {
             }
             """;
 
-        Mockito.when(mcpService.createResponse(any(JsonRpcRequest.class)))
-            .thenReturn(null);
-
         // when & then
         mockMvc.perform(post("/mcp")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -176,9 +172,6 @@ class McpControllerTest {
               }
             }
             """;
-
-        Mockito.when(mcpService.createResponse(any(JsonRpcRequest.class)))
-            .thenReturn(objectMapper.readValue(expectResponseBody, JsonRpcResponse.class));
 
         String requestBody = """
             {
@@ -241,7 +234,7 @@ class McpControllerTest {
             }
             """;
 
-        Mockito.when(mcpService.createResponse(any(JsonRpcRequest.class)))
+        Mockito.when(mcpService.toolList(1))
             .thenReturn(objectMapper.readValue(expectResponseBody, JsonRpcResponse.class));
 
         String requestBody = """
@@ -308,7 +301,7 @@ class McpControllerTest {
                 }
             """;
 
-        Mockito.when(mcpService.createResponse(any(JsonRpcRequest.class)))
+        Mockito.when(mcpService.callTools(any(JsonRpcRequest.class)))
             .thenReturn(objectMapper.readValue(expectResponseBody, JsonRpcResponse.class));
 
         String requestBody = """

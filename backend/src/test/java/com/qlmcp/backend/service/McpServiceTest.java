@@ -3,7 +3,6 @@ package com.qlmcp.backend.service;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,7 +47,7 @@ class McpServiceTest {
         when(mcpProperties.getServerVersion()).thenReturn("0.1.0");
 
         // when
-        JsonRpcResponse actual = mcpService.createResponse(request);
+        JsonRpcResponse actual = mcpService.initialize(requestId);
 
         // then
         Map<String, Object> result = (Map<String, Object>) actual.getResult();
@@ -66,20 +65,6 @@ class McpServiceTest {
     }
 
     @Test
-    @DisplayName("createResponse - NOTIFICATIONS_INITIALIZED")
-    void createResponse_notificationsInitialized() {
-        // given
-        JsonRpcRequest request = mock(JsonRpcRequest.class);
-        when(request.getMethod()).thenReturn(Method.NOTIFICATIONS_INITIALIZED);
-
-        // when
-        JsonRpcResponse actual = mcpService.createResponse(request);
-
-        // then
-        assertNull(actual);
-    }
-
-    @Test
     @DisplayName("createResponse - TOOLS_LIST")
     void createResponse_toolsList() {
         // given
@@ -93,7 +78,7 @@ class McpServiceTest {
             .thenReturn(expectTools);
 
         // when
-        JsonRpcResponse actual = mcpService.createResponse(request);
+        JsonRpcResponse actual = mcpService.toolList(requestId);
 
         // then
         Map<String, Object> result = (Map<String, Object>) actual.getResult();
@@ -129,7 +114,7 @@ class McpServiceTest {
             .thenReturn(new TestTool());
 
         // when
-        JsonRpcResponse actual = mcpService.createResponse(request);
+        JsonRpcResponse actual = mcpService.callTools(request);
 
         // then
         Map<String, Object> result = (Map<String, Object>) actual.getResult();

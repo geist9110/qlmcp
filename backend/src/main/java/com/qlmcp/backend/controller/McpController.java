@@ -2,9 +2,11 @@ package com.qlmcp.backend.controller;
 
 import com.qlmcp.backend.dto.JsonRpcRequest;
 import com.qlmcp.backend.dto.JsonRpcResponse;
+import com.qlmcp.backend.dto.Method;
+import com.qlmcp.backend.exception.CustomException;
+import com.qlmcp.backend.exception.ErrorCode;
 import com.qlmcp.backend.service.McpService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j
 @RestController
 @RequestMapping("/mcp")
 @RequiredArgsConstructor
@@ -26,15 +27,36 @@ public class McpController {
     public ResponseEntity<JsonRpcResponse> handleMcp(
         @RequestBody JsonRpcRequest request
     ) {
-        JsonRpcResponse mcpResponse = mcpService.createResponse(request);
+        Method method = request.getMethod();
 
-        if (mcpResponse == null) {
-            return ResponseEntity.accepted().build();
+        if (method == Method.INITIALIZE) {
+            return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(mcpService.initialize(request.getId()));
         }
 
-        return ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(mcpService.createResponse(request));
+        if (method == Method.NOTIFICATIONS_INITIALIZED) {
+            return ResponseEntity
+                .accepted()
+                .build();
+        }
+
+        if (method == Method.TOOLS_LIST) {
+            return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(mcpService.toolList(request.getId()));
+        }
+
+        if (method == Method.TOOLS_CALL) {
+            return ResponseEntity
+                .ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(mcpService.callTools(request));
+        }
+
+        throw new CustomException(ErrorCode.METHOD_NOT_FOUND);
     }
 
     @GetMapping
