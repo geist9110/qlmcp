@@ -13,7 +13,10 @@ import com.qlmcp.backend.config.ToolRegistry;
 import com.qlmcp.backend.dto.JsonRpcRequest;
 import com.qlmcp.backend.dto.JsonRpcResponse;
 import com.qlmcp.backend.dto.Method;
+import com.qlmcp.backend.dto.ToolInformation;
 import com.qlmcp.backend.tool.ToolInterface;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -80,13 +83,13 @@ class McpServiceTest {
     @DisplayName("createResponse - TOOLS_LIST")
     void createResponse_toolsList() {
         // given
-        Map expectTools = Map.of("tools", new String[]{});
+        List<ToolInformation> expectTools = new LinkedList<>();
 
         Object requestId = "test-id";
         JsonRpcRequest request = mock(JsonRpcRequest.class);
         when(request.getMethod()).thenReturn(Method.TOOLS_LIST);
         when(request.getId()).thenReturn(requestId);
-        when(toolRegistry.getToolsList())
+        when(toolRegistry.getToolInformationList())
             .thenReturn(expectTools);
 
         // when

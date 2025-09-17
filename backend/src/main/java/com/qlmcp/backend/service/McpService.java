@@ -61,7 +61,7 @@ public class McpService {
     private JsonRpcResponse toolList(Object requestId) {
         return JsonRpcResponse.builder()
             .id(requestId)
-            .result(toolRegistry.getToolsList())
+            .result(Map.of("tools", toolRegistry.getToolInformationList()))
             .build();
     }
 
