@@ -1,15 +1,66 @@
 package com.qlmcp.backend.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import java.util.Map;
 import lombok.Getter;
 
-@Getter
 public class JsonRpcRequest {
 
-    private String jsonrpc = "2.0";
-    private Object id;
-    private Method method;
+    @JsonTypeInfo(
+        use = Id.NAME,
+        property = "method",
+        visible = true
+    )
+    @JsonSubTypes({
+        @JsonSubTypes.Type(value = InitializeRequest.class, name = "initialize"),
+        @JsonSubTypes.Type(value = NotificationRequest.class, name = "notifications/initialized"),
+        @JsonSubTypes.Type(value = ToolsListRequest.class, name = "tools/list"),
+        @JsonSubTypes.Type(value = ToolsCallRequest.class, name = "tools/call"),
+    })
+    @Getter
+    public static class McpRequest {
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Object params;
+        private final String jsonrpc = "2.0";
+        private Object id;
+        private String method;
+    }
+
+    @Getter
+    public static class InitializeRequest extends McpRequest {
+
+        private InitializeRequest.Params params;
+
+        public static class Params {
+
+            private String protocolVersion;
+            private Map<String, Object> capabilities;
+            private Map<String, Object> clientInfo;
+        }
+    }
+
+    @Getter
+    public static class NotificationRequest extends McpRequest {
+
+    }
+
+    @Getter
+    public static class ToolsListRequest extends McpRequest {
+
+    }
+
+    @Getter
+    public static class ToolsCallRequest extends McpRequest {
+
+        private ToolsCallRequest.Params params;
+
+        @Getter
+        public static class Params {
+
+            private String name;
+            private Map<String, Object> arguments;
+        }
+    }
+
 }

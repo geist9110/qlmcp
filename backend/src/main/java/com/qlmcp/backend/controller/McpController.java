@@ -1,8 +1,7 @@
 package com.qlmcp.backend.controller;
 
-import com.qlmcp.backend.dto.JsonRpcRequest;
+import com.qlmcp.backend.dto.JsonRpcRequest.McpRequest;
 import com.qlmcp.backend.dto.JsonRpcResponse;
-import com.qlmcp.backend.dto.Method;
 import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
 import com.qlmcp.backend.service.McpService;
@@ -24,32 +23,30 @@ public class McpController {
     private final McpService mcpService;
 
     @PostMapping
-    public ResponseEntity<JsonRpcResponse> handleMcp(
-        @RequestBody JsonRpcRequest request
-    ) {
-        Method method = request.getMethod();
+    public ResponseEntity<JsonRpcResponse> handleMcp(@RequestBody McpRequest request) {
+        String method = request.getMethod();
 
-        if (method == Method.INITIALIZE) {
+        if (method.equals("initialize")) {
             return ResponseEntity
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(mcpService.initialize(request.getId()));
         }
 
-        if (method == Method.NOTIFICATIONS_INITIALIZED) {
+        if (method.equals("notifications/initialized")) {
             return ResponseEntity
                 .accepted()
                 .build();
         }
 
-        if (method == Method.TOOLS_LIST) {
+        if (method.equals("tools/list")) {
             return ResponseEntity
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(mcpService.toolList(request.getId()));
         }
 
-        if (method == Method.TOOLS_CALL) {
+        if (method.equals("tools/call")) {
             return ResponseEntity
                 .ok()
                 .contentType(MediaType.APPLICATION_JSON)

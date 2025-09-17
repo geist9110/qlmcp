@@ -2,7 +2,8 @@ package com.qlmcp.backend.service;
 
 import com.qlmcp.backend.config.McpProperties;
 import com.qlmcp.backend.config.ToolRegistry;
-import com.qlmcp.backend.dto.JsonRpcRequest;
+import com.qlmcp.backend.dto.JsonRpcRequest.McpRequest;
+import com.qlmcp.backend.dto.JsonRpcRequest.ToolsCallRequest;
 import com.qlmcp.backend.dto.JsonRpcResponse;
 import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
@@ -44,37 +45,24 @@ public class McpService {
             .build();
     }
 
-    public JsonRpcResponse callTools(JsonRpcRequest request) {
+    public JsonRpcResponse callTools(McpRequest request) {
+        ToolsCallRequest.Params toolsCallRequest = ((ToolsCallRequest) request).getParams();
+        String name = toolsCallRequest.getName();
+        Map<String, Object> arguments = toolsCallRequest.getArguments();
+
         return JsonRpcResponse.builder()
             .id(request.getId())
-            .result(switchingTools(request.getParams()))
+            .result(executeTool(name, arguments))
             .build();
     }
 
-    private Map<String, Object> switchingTools(Object params) {
-        Map<?, ?> arguments = parseArguments(params);
+    private Map<String, Object> executeTool(String name, Map<String, Object> arguments) {
+        ToolInterface tool = toolRegistry.getToolByName(name);
 
-        ToolInterface tool = toolRegistry.getToolByName((String) ((Map<?, ?>) params).get("name"));
-
-        if (tool != null) {
-            try {
-                return tool.call(arguments);
-            } catch (Exception e) {
-                throw new CustomException(ErrorCode.TOOL_EXECUTION_ERROR);
-            }
+        if (tool == null) {
+            throw new CustomException(ErrorCode.TOOL_NOT_FOUND);
         }
 
-        throw new CustomException(ErrorCode.TOOL_NOT_FOUND);
-    }
-
-    private Map<?, ?> parseArguments(Object params) {
-        if (params instanceof Map) {
-            Object argumentsObj = ((Map<?, ?>) params).get("arguments");
-            if (argumentsObj instanceof Map) {
-                return (Map<?, ?>) argumentsObj;
-            }
-        }
-
-        throw new CustomException(ErrorCode.INVALID_PARAMS);
+        return tool.call(arguments);
     }
 }
