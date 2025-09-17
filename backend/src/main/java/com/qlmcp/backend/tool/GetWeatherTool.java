@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
         """
 )
 @Component
-public class GetWeatherTool {
+public class GetWeatherTool implements ToolInterface {
 
     public Map<String, Object> call(Map<?, ?> arguments) {
         return Map.of(

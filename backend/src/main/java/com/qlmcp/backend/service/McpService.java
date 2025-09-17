@@ -7,6 +7,7 @@ import com.qlmcp.backend.dto.JsonRpcResponse;
 import com.qlmcp.backend.dto.Method;
 import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
+import com.qlmcp.backend.tool.ToolInterface;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -74,12 +75,11 @@ public class McpService {
     private Map<String, Object> switchingTools(Object params) {
         Map<?, ?> arguments = parseArguments(params);
 
-        Object tool = toolRegistry.getToolByName((String) ((Map<?, ?>) params).get("name"));
+        ToolInterface tool = toolRegistry.getToolByName((String) ((Map<?, ?>) params).get("name"));
 
         if (tool != null) {
             try {
-                var method = tool.getClass().getMethod("call", Map.class);
-                return (Map<String, Object>) method.invoke(tool, arguments);
+                return tool.call(arguments);
             } catch (Exception e) {
                 throw new CustomException(ErrorCode.TOOL_EXECUTION_ERROR);
             }

@@ -3,6 +3,7 @@ package com.qlmcp.backend.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
+import com.qlmcp.backend.tool.ToolInterface;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,7 +18,7 @@ public class ToolRegistry {
     private final ApplicationContext applicationContext;
     private final ObjectMapper objectMapper;
 
-    public Object getToolByName(String name) {
+    public ToolInterface getToolByName(String name) {
         Map<String, Object> toolMap = applicationContext
             .getBeansWithAnnotation(ToolMeta.class)
             .values()
@@ -29,7 +30,7 @@ public class ToolRegistry {
                 )
             );
 
-        return toolMap.get(name);
+        return (ToolInterface) toolMap.get(name);
     }
 
     public Map<String, List<Map<String, Object>>> getToolsList() {

@@ -13,6 +13,7 @@ import com.qlmcp.backend.config.ToolRegistry;
 import com.qlmcp.backend.dto.JsonRpcRequest;
 import com.qlmcp.backend.dto.JsonRpcResponse;
 import com.qlmcp.backend.dto.Method;
+import com.qlmcp.backend.tool.ToolInterface;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -110,15 +111,19 @@ class McpServiceTest {
             "arguments", Map.of("param1", "value1"));
         Map<String, Object> expectResult = Map.of("result", "success");
 
+        class TestTool implements ToolInterface {
+
+            public Map<String, Object> call(Map<?, ?> args) {
+                return expectResult;
+            }
+        }
+
         JsonRpcRequest request = mock(JsonRpcRequest.class);
         when(request.getMethod()).thenReturn(Method.TOOLS_CALL);
         when(request.getId()).thenReturn(requestId);
         when(request.getParams()).thenReturn(params);
-        when(toolRegistry.getToolByName("test-tool")).thenReturn(new Object() {
-            public Map<String, Object> call(Map<String, Object> args) {
-                return expectResult;
-            }
-        });
+        when(toolRegistry.getToolByName("test-tool"))
+            .thenReturn(new TestTool());
 
         // when
         JsonRpcResponse actual = mcpService.createResponse(request);

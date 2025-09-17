@@ -29,10 +29,10 @@ import org.springframework.web.client.RestClient;
 )
 @Component
 @RequiredArgsConstructor
-public class QueryTool {
+public class QueryTool implements ToolInterface {
 
     private final AiProperties aiProperties;
-    private RestClient restClient = RestClient.create();
+    private final RestClient restClient = RestClient.create();
 
     public Map<String, Object> call(Map<?, ?> arguments) {
         return Map.of(
