@@ -153,7 +153,7 @@ class McpControllerTest {
         mockMvc.perform(post("/mcp")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
-            .andExpect(status().isOk())
+            .andExpect(status().isAccepted())
             .andDo(document("mcp-notifications-initialized",
                 requestFields(
                     fieldWithPath("jsonrpc").description("JSON-RPC 프로토콜 버전 (예: '2.0')"),
