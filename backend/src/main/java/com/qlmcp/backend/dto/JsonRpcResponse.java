@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class McpResponse {
+public class JsonRpcResponse {
 
     @Builder.Default
     private String jsonrpc = "2.0";

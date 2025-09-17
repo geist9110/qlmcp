@@ -10,8 +10,8 @@ import static org.mockito.Mockito.when;
 
 import com.qlmcp.backend.config.McpProperties;
 import com.qlmcp.backend.config.ToolRegistry;
-import com.qlmcp.backend.dto.McpRequest;
-import com.qlmcp.backend.dto.McpResponse;
+import com.qlmcp.backend.dto.JsonRpcRequest;
+import com.qlmcp.backend.dto.JsonRpcResponse;
 import com.qlmcp.backend.dto.Method;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,7 +36,7 @@ class McpServiceTest {
     void createResponse_initialize() {
         // given
         Object requestId = "test-id";
-        McpRequest request = mock(McpRequest.class);
+        JsonRpcRequest request = mock(JsonRpcRequest.class);
         when(request.getMethod()).thenReturn(Method.INITIALIZE);
         when(request.getId()).thenReturn(requestId);
         when(mcpProperties.getProtocolVersion()).thenReturn("1.0.0");
@@ -44,7 +44,7 @@ class McpServiceTest {
         when(mcpProperties.getServerVersion()).thenReturn("0.1.0");
 
         // when
-        McpResponse actual = mcpService.createResponse(request);
+        JsonRpcResponse actual = mcpService.createResponse(request);
 
         // then
         Map<String, Object> result = (Map<String, Object>) actual.getResult();
@@ -65,11 +65,11 @@ class McpServiceTest {
     @DisplayName("createResponse - NOTIFICATIONS_INITIALIZED")
     void createResponse_notificationsInitialized() {
         // given
-        McpRequest request = mock(McpRequest.class);
+        JsonRpcRequest request = mock(JsonRpcRequest.class);
         when(request.getMethod()).thenReturn(Method.NOTIFICATIONS_INITIALIZED);
 
         // when
-        McpResponse actual = mcpService.createResponse(request);
+        JsonRpcResponse actual = mcpService.createResponse(request);
 
         // then
         assertNull(actual);
@@ -82,14 +82,14 @@ class McpServiceTest {
         Map expectTools = Map.of("tools", new String[]{});
 
         Object requestId = "test-id";
-        McpRequest request = mock(McpRequest.class);
+        JsonRpcRequest request = mock(JsonRpcRequest.class);
         when(request.getMethod()).thenReturn(Method.TOOLS_LIST);
         when(request.getId()).thenReturn(requestId);
         when(toolRegistry.getToolsList())
             .thenReturn(expectTools);
 
         // when
-        McpResponse actual = mcpService.createResponse(request);
+        JsonRpcResponse actual = mcpService.createResponse(request);
 
         // then
         Map<String, Object> result = (Map<String, Object>) actual.getResult();
@@ -110,7 +110,7 @@ class McpServiceTest {
             "arguments", Map.of("param1", "value1"));
         Map<String, Object> expectResult = Map.of("result", "success");
 
-        McpRequest request = mock(McpRequest.class);
+        JsonRpcRequest request = mock(JsonRpcRequest.class);
         when(request.getMethod()).thenReturn(Method.TOOLS_CALL);
         when(request.getId()).thenReturn(requestId);
         when(request.getParams()).thenReturn(params);
@@ -121,7 +121,7 @@ class McpServiceTest {
         });
 
         // when
-        McpResponse actual = mcpService.createResponse(request);
+        JsonRpcResponse actual = mcpService.createResponse(request);
 
         // then
         Map<String, Object> result = (Map<String, Object>) actual.getResult();

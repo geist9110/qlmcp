@@ -2,8 +2,8 @@ package com.qlmcp.backend.service;
 
 import com.qlmcp.backend.config.McpProperties;
 import com.qlmcp.backend.config.ToolRegistry;
-import com.qlmcp.backend.dto.McpRequest;
-import com.qlmcp.backend.dto.McpResponse;
+import com.qlmcp.backend.dto.JsonRpcRequest;
+import com.qlmcp.backend.dto.JsonRpcResponse;
 import com.qlmcp.backend.dto.Method;
 import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
@@ -19,7 +19,7 @@ public class McpService {
     private final McpProperties mcpProperties;
     private final ToolRegistry toolRegistry;
 
-    public McpResponse createResponse(McpRequest request) {
+    public JsonRpcResponse createResponse(JsonRpcRequest request) {
         if (request.getMethod() == Method.INITIALIZE) {
             return initialize(request.getId());
         }
@@ -39,7 +39,7 @@ public class McpService {
         throw new CustomException(ErrorCode.METHOD_NOT_FOUND);
     }
 
-    private McpResponse initialize(Object requestId) {
+    private JsonRpcResponse initialize(Object requestId) {
         Map<String, Object> initializeResult = new HashMap<>();
         initializeResult.put("protocolVersion", mcpProperties.getProtocolVersion());
         initializeResult.put("capabilities", Map.of(
@@ -51,21 +51,21 @@ public class McpService {
         ));
         initializeResult.put("instructions", "Optional instructions for the client");
 
-        return McpResponse.builder()
+        return JsonRpcResponse.builder()
             .id(requestId)
             .result(initializeResult)
             .build();
     }
 
-    private McpResponse toolList(Object requestId) {
-        return McpResponse.builder()
+    private JsonRpcResponse toolList(Object requestId) {
+        return JsonRpcResponse.builder()
             .id(requestId)
             .result(toolRegistry.getToolsList())
             .build();
     }
 
-    private McpResponse callTools(McpRequest request) {
-        return McpResponse.builder()
+    private JsonRpcResponse callTools(JsonRpcRequest request) {
+        return JsonRpcResponse.builder()
             .id(request.getId())
             .result(switchingTools(request.getParams()))
             .build();

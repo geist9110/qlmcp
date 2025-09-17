@@ -9,8 +9,8 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.response
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qlmcp.backend.dto.McpRequest;
-import com.qlmcp.backend.dto.McpResponse;
+import com.qlmcp.backend.dto.JsonRpcRequest;
+import com.qlmcp.backend.dto.JsonRpcResponse;
 import com.qlmcp.backend.service.McpService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -65,9 +65,9 @@ class McpControllerTest {
             }
             """;
 
-        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
+        Mockito.when(mcpService.createResponse(any(JsonRpcRequest.class)))
             .thenReturn(objectMapper
-                .readValue(expectResponseBody, McpResponse.class));
+                .readValue(expectResponseBody, JsonRpcResponse.class));
 
         String requestBody = """
             {
@@ -146,7 +146,7 @@ class McpControllerTest {
             }
             """;
 
-        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
+        Mockito.when(mcpService.createResponse(any(JsonRpcRequest.class)))
             .thenReturn(null);
 
         // when & then
@@ -177,8 +177,8 @@ class McpControllerTest {
             }
             """;
 
-        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
-            .thenReturn(objectMapper.readValue(expectResponseBody, McpResponse.class));
+        Mockito.when(mcpService.createResponse(any(JsonRpcRequest.class)))
+            .thenReturn(objectMapper.readValue(expectResponseBody, JsonRpcResponse.class));
 
         String requestBody = """
             {
@@ -241,8 +241,8 @@ class McpControllerTest {
             }
             """;
 
-        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
-            .thenReturn(objectMapper.readValue(expectResponseBody, McpResponse.class));
+        Mockito.when(mcpService.createResponse(any(JsonRpcRequest.class)))
+            .thenReturn(objectMapper.readValue(expectResponseBody, JsonRpcResponse.class));
 
         String requestBody = """
             {
@@ -308,8 +308,8 @@ class McpControllerTest {
                 }
             """;
 
-        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
-            .thenReturn(objectMapper.readValue(expectResponseBody, McpResponse.class));
+        Mockito.when(mcpService.createResponse(any(JsonRpcRequest.class)))
+            .thenReturn(objectMapper.readValue(expectResponseBody, JsonRpcResponse.class));
 
         String requestBody = """
                 {

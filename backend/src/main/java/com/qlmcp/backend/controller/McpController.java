@@ -1,7 +1,7 @@
 package com.qlmcp.backend.controller;
 
-import com.qlmcp.backend.dto.McpRequest;
-import com.qlmcp.backend.dto.McpResponse;
+import com.qlmcp.backend.dto.JsonRpcRequest;
+import com.qlmcp.backend.dto.JsonRpcResponse;
 import com.qlmcp.backend.service.McpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,10 +23,10 @@ public class McpController {
     private final McpService mcpService;
 
     @PostMapping
-    public ResponseEntity<McpResponse> handleMcp(
-        @RequestBody McpRequest request
+    public ResponseEntity<JsonRpcResponse> handleMcp(
+        @RequestBody JsonRpcRequest request
     ) {
-        McpResponse mcpResponse = mcpService.createResponse(request);
+        JsonRpcResponse mcpResponse = mcpService.createResponse(request);
 
         if (mcpResponse == null) {
             return ResponseEntity.accepted().build();
