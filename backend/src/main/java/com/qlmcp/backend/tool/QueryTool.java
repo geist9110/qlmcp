@@ -9,6 +9,9 @@ import com.qlmcp.backend.dto.GeminiApiRequest.GenerationConfig.ThinkingConfig;
 import com.qlmcp.backend.dto.GeminiApiRequest.SystemInstruction;
 import com.qlmcp.backend.dto.GeminiApiRequest.Tool;
 import com.qlmcp.backend.dto.GeminiApiRequest.Tool.FunctionDeclaration;
+import com.qlmcp.backend.dto.GeminiApiResponse;
+import com.qlmcp.backend.dto.GeminiApiResponse.Candidate.Content.Part;
+import com.qlmcp.backend.dto.GeminiApiResponse.Candidate.Content.TextPart;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -95,23 +98,21 @@ public class QueryTool implements ToolInterface {
             )
             .build();
 
-        Map response = restClient.post()
+        GeminiApiResponse response = restClient.post()
             .uri(URI.create(apiUrl))
             .header("x-goog-api-key", aiProperties.getKey())
             .contentType(MediaType.APPLICATION_JSON)
             .body(requestBody)
             .retrieve()
-            .body(Map.class);
+            .body(GeminiApiResponse.class);
 
-        List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get(
-            "candidates");
-        if (candidates.size() == 1) {
-            Map<String, Object> candidate = candidates.get(0);
+        assert response != null;
+        List<Part> parts = response.getCandidates().getFirst().getContent().getParts();
+
+        Part part = parts.getFirst();
+        if (part instanceof TextPart) {
+            return ((TextPart) part).getText();
         }
-
-        Map<String, Object> responseContent = (Map<String, Object>) candidates.get(0)
-            .get("content");
-        List<Map<String, Object>> parts = (List<Map<String, Object>>) responseContent.get("parts");
-        return (String) parts.get(0).get("text");
+        return "";
     }
 }
