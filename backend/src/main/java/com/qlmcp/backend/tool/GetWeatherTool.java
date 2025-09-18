@@ -1,8 +1,8 @@
 package com.qlmcp.backend.tool;
 
 import com.qlmcp.backend.config.ToolMeta;
-import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
+import com.qlmcp.backend.exception.McpException;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Component;
@@ -38,7 +38,7 @@ public class GetWeatherTool implements ToolInterface {
 
     private String getWeather(Object id, String city) {
         if (city == null || city.isEmpty()) {
-            throw new CustomException(id, ErrorCode.INVALID_PARAMS);
+            throw new McpException(id, ErrorCode.INVALID_PARAMS);
         }
 
         return String.format("Sunnyday in %s", city);

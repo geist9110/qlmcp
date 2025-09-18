@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice(basePackageClasses = McpController.class)
 public class McpExceptionHandler {
 
-    @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
+    @ExceptionHandler(McpException.class)
+    public ResponseEntity<ErrorResponse> handleCustomException(McpException e) {
         return ResponseEntity
             .internalServerError()
             .body(new ErrorResponse(

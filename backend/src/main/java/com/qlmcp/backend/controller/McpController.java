@@ -2,8 +2,8 @@ package com.qlmcp.backend.controller;
 
 import com.qlmcp.backend.dto.JsonRpcRequest.McpRequest;
 import com.qlmcp.backend.dto.JsonRpcResponse.McpResponse;
-import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
+import com.qlmcp.backend.exception.McpException;
 import com.qlmcp.backend.service.McpService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -53,7 +53,7 @@ public class McpController {
                 .body(mcpService.callTools(request));
         }
 
-        throw new CustomException(request.getId(), ErrorCode.METHOD_NOT_FOUND);
+        throw new McpException(request.getId(), ErrorCode.METHOD_NOT_FOUND);
     }
 
     @GetMapping

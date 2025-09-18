@@ -8,8 +8,8 @@ import com.qlmcp.backend.dto.JsonRpcResponse.InitializeResponse;
 import com.qlmcp.backend.dto.JsonRpcResponse.McpResponse;
 import com.qlmcp.backend.dto.JsonRpcResponse.ToolsCallResponse;
 import com.qlmcp.backend.dto.JsonRpcResponse.ToolsListResponse;
-import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
+import com.qlmcp.backend.exception.McpException;
 import com.qlmcp.backend.tool.ToolInterface;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +50,7 @@ public class McpService {
         ToolInterface tool = toolRegistry.getToolByName(params.getName());
 
         if (tool == null) {
-            throw new CustomException(request.getId(), ErrorCode.TOOL_NOT_FOUND);
+            throw new McpException(request.getId(), ErrorCode.TOOL_NOT_FOUND);
         }
 
         return new ToolsCallResponse(
