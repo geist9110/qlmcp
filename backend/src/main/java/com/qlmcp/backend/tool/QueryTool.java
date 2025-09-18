@@ -34,15 +34,13 @@ public class QueryTool implements ToolInterface {
     private final AiProperties aiProperties;
     private final RestClient restClient = RestClient.create();
 
-    public Map<String, Object> call(Map<?, ?> arguments) {
-        return Map.of(
-            "content", List.of(
-                Map.of(
-                    "type", "text",
-                    "text", sendChat((String) arguments.get("question"))
-                )
-            ),
-            "isError", false
+    @Override
+    public List<Object> call(Object id, Map<?, ?> arguments) {
+        return List.of(
+            Map.of(
+                "type", "text",
+                "text", sendChat((String) arguments.get("question"))
+            )
         );
     }
 

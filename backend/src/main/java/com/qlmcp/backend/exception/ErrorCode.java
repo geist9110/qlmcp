@@ -1,10 +1,12 @@
 package com.qlmcp.backend.exception;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum ErrorCode {
     METHOD_NOT_FOUND(-32601, "Method not found"),
     INVALID_PARAMS(-32602, "Invalid params"),

@@ -105,8 +105,9 @@ class McpServiceTest {
 
         class TestTool implements ToolInterface {
 
-            public Map<String, Object> call(Map<?, ?> args) {
-                return expectResult;
+            @Override
+            public List<Object> call(Map<?, ?> args) {
+                return List.of(expectResult);
             }
         }
 

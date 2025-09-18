@@ -2,8 +2,8 @@ package com.qlmcp.backend.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qlmcp.backend.dto.ToolInformation;
-import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
+import com.qlmcp.backend.exception.InitializeException;
 import com.qlmcp.backend.tool.ToolInterface;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +58,7 @@ public class ToolRegistry {
                     inputSchema
                 );
             } catch (Exception e) {
-                throw new CustomException(ErrorCode.SCHEMA_PARSING_ERROR);
+                throw new InitializeException(ErrorCode.SCHEMA_PARSING_ERROR);
             }
         }).toList();
     }

@@ -1,7 +1,7 @@
 package com.qlmcp.backend.controller;
 
 import com.qlmcp.backend.dto.JsonRpcRequest.McpRequest;
-import com.qlmcp.backend.dto.JsonRpcResponse;
+import com.qlmcp.backend.dto.JsonRpcResponse.McpResponse;
 import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
 import com.qlmcp.backend.service.McpService;
@@ -23,7 +23,7 @@ public class McpController {
     private final McpService mcpService;
 
     @PostMapping
-    public ResponseEntity<JsonRpcResponse> handleMcp(@RequestBody McpRequest request) {
+    public ResponseEntity<McpResponse> handleMcp(@RequestBody McpRequest request) {
         String method = request.getMethod();
 
         if (method.equals("initialize")) {
@@ -53,7 +53,7 @@ public class McpController {
                 .body(mcpService.callTools(request));
         }
 
-        throw new CustomException(ErrorCode.METHOD_NOT_FOUND);
+        throw new CustomException(request.getId(), ErrorCode.METHOD_NOT_FOUND);
     }
 
     @GetMapping
