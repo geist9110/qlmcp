@@ -2,8 +2,14 @@ package com.qlmcp.backend.tool;
 
 import com.qlmcp.backend.config.AiProperties;
 import com.qlmcp.backend.config.ToolMeta;
+import com.qlmcp.backend.dto.GeminiApiRequest;
+import com.qlmcp.backend.dto.GeminiApiRequest.Content;
+import com.qlmcp.backend.dto.GeminiApiRequest.GenerationConfig;
+import com.qlmcp.backend.dto.GeminiApiRequest.GenerationConfig.ThinkingConfig;
+import com.qlmcp.backend.dto.GeminiApiRequest.SystemInstruction;
+import com.qlmcp.backend.dto.GeminiApiRequest.Tool;
+import com.qlmcp.backend.dto.GeminiApiRequest.Tool.FunctionDeclaration;
 import java.net.URI;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -39,53 +45,37 @@ public class QueryTool implements ToolInterface {
         return List.of(
             Map.of(
                 "type", "text",
-                "text", sendChat((String) arguments.get("question"))
+                "text", sendChat(
+                    new Content("user", (String) arguments.get("question"))
+                )
             )
         );
     }
 
-    private String sendChat(String message) {
+    private String sendChat(Content content) {
         String apiUrl = aiProperties.getBaseUrl() + "/" + aiProperties.getModel() + ":"
             + aiProperties.getType();
 
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put(
-            "system_instruction",
-            Map.of(
-                "parts",
-                List.of(Map.of("text", "You are a ql mcp assistant."))
+        GeminiApiRequest requestBody = GeminiApiRequest
+            .builder()
+            .systemInstruction(
+                new SystemInstruction("You are a ql mcp assistant.")
             )
-        );
-
-        requestBody.put(
-            "contents",
-            List.of(
-                Map.of(
-                    "role", "user",
-                    "parts", List.of(Map.of("text", message))
+            .contents(
+                List.of(content)
+            )
+            .generationConfig(
+                new GenerationConfig(
+                    new ThinkingConfig(0)
                 )
             )
-        );
-
-        requestBody.put(
-            "generationConfig",
-            Map.of(
-                "thinkingConfig",
-                Map.of("thinkingBudget", 0)
-            )
-        );
-
-        requestBody.put(
-            "tools",
-            List.of(
-                Map.of(
-                    "functionDeclarations",
-                    List.of(
-                        Map.of(
-                            "name", "get_nowcast_observation",
-                            "description",
+            .tools(
+                List.of(
+                    new Tool(
+                        new FunctionDeclaration(
+                            "get_nowcast_observation",
                             "특정 위경도의 날씨 정보를 가져옵니다. Args: lon (float): 경도 값 lat (float): 위도 값",
-                            "parameters", Map.of(
+                            Map.of(
                                 "type", "object",
                                 "properties", Map.of(
                                     "lon", Map.of(
@@ -103,7 +93,7 @@ public class QueryTool implements ToolInterface {
                     )
                 )
             )
-        );
+            .build();
 
         Map response = restClient.post()
             .uri(URI.create(apiUrl))
@@ -119,8 +109,9 @@ public class QueryTool implements ToolInterface {
             Map<String, Object> candidate = candidates.get(0);
         }
 
-        Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
-        List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
+        Map<String, Object> responseContent = (Map<String, Object>) candidates.get(0)
+            .get("content");
+        List<Map<String, Object>> parts = (List<Map<String, Object>>) responseContent.get("parts");
         return (String) parts.get(0).get("text");
     }
 }
