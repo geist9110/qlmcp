@@ -84,7 +84,8 @@ public class JsonRpcResponse {
         public static class Result {
 
             private final List<Object> content;
-            private final boolean isError = false;
+
+            private final Boolean isError = false;
 
             public Result(List<Object> content) {
                 this.content = content;

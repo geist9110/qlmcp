@@ -2,6 +2,7 @@ package com.qlmcp.backend.service;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -11,7 +12,10 @@ import com.qlmcp.backend.config.McpProperties;
 import com.qlmcp.backend.config.ToolRegistry;
 import com.qlmcp.backend.dto.JsonRpcRequest.McpRequest;
 import com.qlmcp.backend.dto.JsonRpcRequest.ToolsCallRequest;
-import com.qlmcp.backend.dto.JsonRpcResponse;
+import com.qlmcp.backend.dto.JsonRpcResponse.InitializeResponse;
+import com.qlmcp.backend.dto.JsonRpcResponse.McpResponse;
+import com.qlmcp.backend.dto.JsonRpcResponse.ToolsCallResponse;
+import com.qlmcp.backend.dto.JsonRpcResponse.ToolsListResponse;
 import com.qlmcp.backend.dto.ToolInformation;
 import com.qlmcp.backend.tool.ToolInterface;
 import java.util.LinkedList;
@@ -23,44 +27,55 @@ import org.junit.jupiter.api.Test;
 
 class McpServiceTest {
 
-    private McpProperties mcpProperties;
+    private final McpProperties mcpProperties = mock(McpProperties.class);
     private ToolRegistry toolRegistry;
     private McpService mcpService;
 
+    private final String expectJsonRpcVersion = "2.0";
+    private final String requestId = "test-id";
+    private final String expectProtocolVersion = "1.0.0";
+    private final String expectServerName = "test-server";
+    private final String expectServerVersion = "0.1.0";
+
+    // Properties를 통해 Instructions 값을 주입받도록 변경 필요
+    private final String expectInstructions = "Optional instructions for the client";
+
     @BeforeEach
     void setUp() {
-        mcpProperties = mock(McpProperties.class);
         toolRegistry = mock(ToolRegistry.class);
         mcpService = new McpService(mcpProperties, toolRegistry);
+
+        when(mcpProperties.getProtocolVersion()).thenReturn(expectProtocolVersion);
+        when(mcpProperties.getServerName()).thenReturn(expectServerName);
+        when(mcpProperties.getServerVersion()).thenReturn(expectServerVersion);
     }
 
     @Test
     @DisplayName("createResponse - INITIALIZE")
     void createResponse_initialize() {
         // given
-        Object requestId = "test-id";
         McpRequest request = mock(McpRequest.class);
-        when(request.getMethod()).thenReturn("initialize");
-        when(request.getId()).thenReturn(requestId);
-        when(mcpProperties.getProtocolVersion()).thenReturn("1.0.0");
-        when(mcpProperties.getServerName()).thenReturn("test-server");
-        when(mcpProperties.getServerVersion()).thenReturn("0.1.0");
 
         // when
-        JsonRpcResponse actual = mcpService.initialize(requestId);
+        when(request.getMethod()).thenReturn("initialize");
+        when(request.getId()).thenReturn(requestId);
 
         // then
-        Map<String, Object> result = (Map<String, Object>) actual.getResult();
-        Map<String, Object> serverInfo = (Map<String, Object>) result.get("serverInfo");
+        InitializeResponse actual = (InitializeResponse) mcpService.initialize(requestId);
+        InitializeResponse.Result result = actual.getResult();
 
         assertAll(
             () -> assertNotNull(actual),
+            () -> assertEquals(expectJsonRpcVersion, actual.getJsonrpc()),
             () -> assertEquals(requestId, actual.getId()),
-            () -> assertEquals("1.0.0", result.get("protocolVersion")),
-            () -> assertTrue(result.containsKey("capabilities")),
-            () -> assertTrue(result.containsKey("serverInfo")),
-            () -> assertEquals("test-server", serverInfo.get("name")),
-            () -> assertEquals("0.1.0", serverInfo.get("version"))
+            () -> assertEquals(expectProtocolVersion, result.getProtocolVersion()),
+            () -> assertEquals(expectInstructions, result.getInstructions()),
+            () -> assertTrue(result.getServerInfo().containsKey("name")),
+            () -> assertTrue(result.getServerInfo().containsKey("version")),
+            () -> assertEquals(expectServerName, result.getServerInfo().get("name")),
+            () -> assertEquals(expectServerVersion, result.getServerInfo().get("version")),
+            () -> assertTrue(result.getCapabilities().containsKey("tools")),
+            () -> assertEquals(Map.of(), result.getCapabilities().get("tools"))
         );
     }
 
@@ -69,24 +84,21 @@ class McpServiceTest {
     void createResponse_toolsList() {
         // given
         List<ToolInformation> expectTools = new LinkedList<>();
-
-        Object requestId = "test-id";
         McpRequest request = mock(McpRequest.class);
-        when(request.getMethod()).thenReturn("tools/list");
-        when(request.getId()).thenReturn(requestId);
-        when(toolRegistry.getToolInformationList())
-            .thenReturn(expectTools);
 
         // when
-        JsonRpcResponse actual = mcpService.toolList(requestId);
+        when(request.getMethod()).thenReturn("tools/list");
+        when(request.getId()).thenReturn(requestId);
+        when(toolRegistry.getToolInformationList()).thenReturn(expectTools);
 
         // then
-        Map<String, Object> result = (Map<String, Object>) actual.getResult();
+        ToolsListResponse actual = (ToolsListResponse) mcpService.toolList(requestId);
 
         assertAll(
             () -> assertNotNull(actual),
+            () -> assertEquals(expectJsonRpcVersion, actual.getJsonrpc()),
             () -> assertEquals(requestId, actual.getId()),
-            () -> assertTrue(result.containsKey("tools"))
+            () -> assertEquals(expectTools, actual.getResult().getTools())
         );
     }
 
@@ -94,7 +106,6 @@ class McpServiceTest {
     @DisplayName("createResponse - TOOLS_CALL")
     void createResponse_toolsCall() {
         // given
-        Object requestId = "test-id";
         ToolsCallRequest.Params params = new ToolsCallRequest.Params(
             "test-tool",
             Map.of("arguments",
@@ -106,28 +117,30 @@ class McpServiceTest {
         class TestTool implements ToolInterface {
 
             @Override
-            public List<Object> call(Map<?, ?> args) {
+            public List<Object> call(Object id, Map<?, ?> arguments) {
                 return List.of(expectResult);
             }
         }
 
         ToolsCallRequest request = mock(ToolsCallRequest.class);
+
+        // when
         when(request.getMethod()).thenReturn("tools/call");
         when(request.getId()).thenReturn(requestId);
         when(request.getParams()).thenReturn(params);
-        when(toolRegistry.getToolByName("test-tool"))
-            .thenReturn(new TestTool());
-
-        // when
-        JsonRpcResponse actual = mcpService.callTools(request);
+        when(toolRegistry.getToolByName("test-tool")).thenReturn(new TestTool());
 
         // then
-        Map<String, Object> result = (Map<String, Object>) actual.getResult();
+        McpResponse actual = mcpService.callTools(request);
+        ToolsCallResponse.Result result = ((ToolsCallResponse) actual).getResult();
 
         assertAll(
             () -> assertNotNull(actual),
+            () -> assertEquals(expectJsonRpcVersion, actual.getJsonrpc()),
             () -> assertEquals(requestId, actual.getId()),
-            () -> assertEquals(expectResult, result)
+            () -> assertFalse(result.getIsError()),
+            () -> assertEquals(1, result.getContent().size()),
+            () -> assertEquals(expectResult, result.getContent().getFirst())
         );
     }
 }
