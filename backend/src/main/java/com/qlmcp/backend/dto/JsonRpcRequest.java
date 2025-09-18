@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 public class JsonRpcRequest {
@@ -11,13 +12,14 @@ public class JsonRpcRequest {
     @JsonTypeInfo(
         use = Id.NAME,
         property = "method",
-        visible = true
+        visible = true,
+        defaultImpl = UnknownRequest.class
     )
     @JsonSubTypes({
         @JsonSubTypes.Type(value = InitializeRequest.class, name = "initialize"),
         @JsonSubTypes.Type(value = NotificationRequest.class, name = "notifications/initialized"),
         @JsonSubTypes.Type(value = ToolsListRequest.class, name = "tools/list"),
-        @JsonSubTypes.Type(value = ToolsCallRequest.class, name = "tools/call"),
+        @JsonSubTypes.Type(value = ToolsCallRequest.class, name = "tools/call")
     })
     @Getter
     public static class McpRequest {
@@ -56,6 +58,7 @@ public class JsonRpcRequest {
         private ToolsCallRequest.Params params;
 
         @Getter
+        @AllArgsConstructor
         public static class Params {
 
             private String name;
@@ -63,4 +66,8 @@ public class JsonRpcRequest {
         }
     }
 
+    @Getter
+    public static class UnknownRequest extends McpRequest {
+        // 명시되지 않은 method 타입이 들어온 경우 에러 핸들링을 위한 클래스
+    }
 }

@@ -9,7 +9,7 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.response
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qlmcp.backend.dto.JsonRpcRequest;
+import com.qlmcp.backend.dto.JsonRpcRequest.McpRequest;
 import com.qlmcp.backend.dto.JsonRpcResponse;
 import com.qlmcp.backend.service.McpService;
 import org.junit.jupiter.api.DisplayName;
@@ -301,7 +301,7 @@ class McpControllerTest {
                 }
             """;
 
-        Mockito.when(mcpService.callTools(any(JsonRpcRequest.class)))
+        Mockito.when(mcpService.callTools(any(McpRequest.class)))
             .thenReturn(objectMapper.readValue(expectResponseBody, JsonRpcResponse.class));
 
         String requestBody = """

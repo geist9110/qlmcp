@@ -9,9 +9,9 @@ import static org.mockito.Mockito.when;
 
 import com.qlmcp.backend.config.McpProperties;
 import com.qlmcp.backend.config.ToolRegistry;
-import com.qlmcp.backend.dto.JsonRpcRequest;
+import com.qlmcp.backend.dto.JsonRpcRequest.McpRequest;
+import com.qlmcp.backend.dto.JsonRpcRequest.ToolsCallRequest;
 import com.qlmcp.backend.dto.JsonRpcResponse;
-import com.qlmcp.backend.dto.Method;
 import com.qlmcp.backend.dto.ToolInformation;
 import com.qlmcp.backend.tool.ToolInterface;
 import java.util.LinkedList;
@@ -39,8 +39,8 @@ class McpServiceTest {
     void createResponse_initialize() {
         // given
         Object requestId = "test-id";
-        JsonRpcRequest request = mock(JsonRpcRequest.class);
-        when(request.getMethod()).thenReturn(Method.INITIALIZE);
+        McpRequest request = mock(McpRequest.class);
+        when(request.getMethod()).thenReturn("initialize");
         when(request.getId()).thenReturn(requestId);
         when(mcpProperties.getProtocolVersion()).thenReturn("1.0.0");
         when(mcpProperties.getServerName()).thenReturn("test-server");
@@ -71,8 +71,8 @@ class McpServiceTest {
         List<ToolInformation> expectTools = new LinkedList<>();
 
         Object requestId = "test-id";
-        JsonRpcRequest request = mock(JsonRpcRequest.class);
-        when(request.getMethod()).thenReturn(Method.TOOLS_LIST);
+        McpRequest request = mock(McpRequest.class);
+        when(request.getMethod()).thenReturn("tools/list");
         when(request.getId()).thenReturn(requestId);
         when(toolRegistry.getToolInformationList())
             .thenReturn(expectTools);
@@ -95,8 +95,12 @@ class McpServiceTest {
     void createResponse_toolsCall() {
         // given
         Object requestId = "test-id";
-        Map<String, Object> params = Map.of("name", "test-tool",
-            "arguments", Map.of("param1", "value1"));
+        ToolsCallRequest.Params params = new ToolsCallRequest.Params(
+            "test-tool",
+            Map.of("arguments",
+                Map.of("param1", "value1")
+            )
+        );
         Map<String, Object> expectResult = Map.of("result", "success");
 
         class TestTool implements ToolInterface {
@@ -106,8 +110,8 @@ class McpServiceTest {
             }
         }
 
-        JsonRpcRequest request = mock(JsonRpcRequest.class);
-        when(request.getMethod()).thenReturn(Method.TOOLS_CALL);
+        ToolsCallRequest request = mock(ToolsCallRequest.class);
+        when(request.getMethod()).thenReturn("tools/call");
         when(request.getId()).thenReturn(requestId);
         when(request.getParams()).thenReturn(params);
         when(toolRegistry.getToolByName("test-tool"))
