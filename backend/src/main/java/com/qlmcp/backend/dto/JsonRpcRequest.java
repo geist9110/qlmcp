@@ -34,6 +34,7 @@ public class JsonRpcRequest {
 
         private InitializeRequest.Params params;
 
+        @Getter
         public static class Params {
 
             private String protocolVersion;
