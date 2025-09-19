@@ -12,9 +12,12 @@ import com.qlmcp.backend.dto.GeminiApiRequest.Tool.FunctionDeclaration;
 import com.qlmcp.backend.dto.GeminiApiResponse;
 import com.qlmcp.backend.dto.GeminiApiResponse.Candidate.Content.Part;
 import com.qlmcp.backend.dto.GeminiApiResponse.Candidate.Content.TextPart;
+import com.qlmcp.backend.exception.ErrorCode;
+import com.qlmcp.backend.exception.McpException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -98,18 +101,22 @@ public class QueryTool implements ToolInterface {
             )
             .build();
 
-        GeminiApiResponse response = restClient.post()
-            .uri(URI.create(apiUrl))
-            .header("x-goog-api-key", aiProperties.getKey())
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(requestBody)
-            .retrieve()
-            .body(GeminiApiResponse.class);
+        GeminiApiResponse response = Optional.ofNullable(
+            restClient.post()
+                .uri(URI.create(apiUrl))
+                .header("x-goog-api-key", aiProperties.getKey())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(requestBody)
+                .retrieve()
+                .body(GeminiApiResponse.class)
+        ).orElseThrow(
+            () -> new McpException(1, ErrorCode.TOOL_EXECUTION_ERROR)
+        );
 
-        assert response != null;
         List<Part> parts = response.getCandidates().getFirst().getContent().getParts();
 
         Part part = parts.getFirst();
+
         if (part instanceof TextPart) {
             return ((TextPart) part).getText();
         }
