@@ -1,8 +1,7 @@
 package com.qlmcp.backend.exception;
 
 import com.qlmcp.backend.controller.McpController;
-import com.qlmcp.backend.dto.McpResponse;
-import java.util.Map;
+import com.qlmcp.backend.dto.JsonRpcResponse.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -10,15 +9,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice(basePackageClasses = McpController.class)
 public class McpExceptionHandler {
 
-    @ExceptionHandler(CustomException.class)
-    public ResponseEntity<McpResponse> handleCustomException(CustomException e) {
+    @ExceptionHandler(McpException.class)
+    public ResponseEntity<ErrorResponse> handleCustomException(McpException e) {
         return ResponseEntity
             .internalServerError()
-            .body(McpResponse.builder()
-                .error(Map.of(
-                    "code", e.getErrorCode().getCode(),
-                    "message", e.getErrorCode().getMessage()
-                ))
-                .build());
+            .body(new ErrorResponse(
+                e.getId(),
+                e.getErrorCode()
+            ));
     }
 }

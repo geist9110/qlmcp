@@ -5,7 +5,8 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class CustomException extends RuntimeException {
+public class McpException extends RuntimeException {
 
+    private final Object id;
     private final ErrorCode errorCode;
 }

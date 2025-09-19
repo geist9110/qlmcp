@@ -9,9 +9,17 @@ import static org.springframework.restdocs.payload.PayloadDocumentation.response
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qlmcp.backend.dto.McpRequest;
-import com.qlmcp.backend.dto.McpResponse;
+import com.qlmcp.backend.dto.JsonRpcRequest.McpRequest;
+import com.qlmcp.backend.dto.JsonRpcResponse.ErrorResponse;
+import com.qlmcp.backend.dto.JsonRpcResponse.InitializeResponse;
+import com.qlmcp.backend.dto.JsonRpcResponse.McpResponse;
+import com.qlmcp.backend.dto.JsonRpcResponse.ToolsCallResponse;
+import com.qlmcp.backend.dto.JsonRpcResponse.ToolsListResponse;
+import com.qlmcp.backend.dto.ToolInformation;
+import com.qlmcp.backend.exception.ErrorCode;
 import com.qlmcp.backend.service.McpService;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -27,8 +35,10 @@ import org.springframework.test.web.servlet.MockMvc;
 class McpControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Autowired
     private MockMvc mockMvc;
+
     @MockitoBean
     private McpService mcpService;
 
@@ -36,39 +46,6 @@ class McpControllerTest {
     @DisplayName("MCP Initialize 요청 처리")
     void handleMcp_initialize() throws Exception {
         // given
-        String expectResponseBody = """
-            {
-              "jsonrpc": "2.0",
-              "id": 1,
-              "result": {
-                "protocolVersion": "2025-06-18",
-                "capabilities": {
-                  "logging": {},
-                  "prompts": {
-                    "listChanged": true
-                  },
-                  "resources": {
-                    "subscribe": true,
-                    "listChanged": true
-                  },
-                  "tools": {
-                    "listChanged": true
-                  }
-                },
-                "serverInfo": {
-                  "name": "ExampleServer",
-                  "title": "Example Server Display Name",
-                  "version": "1.0.0"
-                },
-                "instructions": "Optional instructions for the client"
-              }
-            }
-            """;
-
-        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
-            .thenReturn(objectMapper
-                .readValue(expectResponseBody, McpResponse.class));
-
         String requestBody = """
             {
               "jsonrpc": "2.0",
@@ -92,7 +69,33 @@ class McpControllerTest {
             }
             """;
 
-        // when & then
+        //TODO ResponseBody의 정확한 응답을 검증하는 단계는 아직 미완성입니다.
+        McpResponse expectResponse = new InitializeResponse(
+            1,
+            "2025-06-18",
+            "Optional instructions for the client",
+            Map.of(
+                "logging", Map.of(),
+                "prompts", Map.of(
+                    "listChanged", true
+                ),
+                "resources", Map.of(
+                    "subscribe", true,
+                    "listChanged", true
+                ),
+                "tools", Map.of("listChanged", true)
+            ),
+            Map.of(
+                "name", "ExampleServer",
+                "title", "Example Server Display Name",
+                "version", "1.0.0"
+            )
+        );
+
+        // when
+        Mockito.when(mcpService.initialize(1)).thenReturn(expectResponse);
+
+        // then
         mockMvc.perform(post("/mcp")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
@@ -146,9 +149,6 @@ class McpControllerTest {
             }
             """;
 
-        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
-            .thenReturn(null);
-
         // when & then
         mockMvc.perform(post("/mcp")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -166,20 +166,6 @@ class McpControllerTest {
     @DisplayName("MCP Error 응답 처리")
     void handleMcp_error() throws Exception {
         // given
-        String expectResponseBody = """
-            {
-              "jsonrpc": "2.0",
-              "id": 2,
-              "error": {
-                "code": -32601,
-                "message": "Method not found"
-              }
-            }
-            """;
-
-        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
-            .thenReturn(objectMapper.readValue(expectResponseBody, McpResponse.class));
-
         String requestBody = """
             {
               "jsonrpc": "2.0",
@@ -188,6 +174,12 @@ class McpControllerTest {
               "params": {}
             }
             """;
+
+        //TODO ResponseBody의 정확한 응답을 검증하는 단계는 아직 미완성입니다.
+        ErrorResponse expectResponse = new ErrorResponse(
+            2,
+            ErrorCode.METHOD_NOT_FOUND
+        );
 
         // when & then
         mockMvc.perform(post("/mcp")
@@ -214,36 +206,6 @@ class McpControllerTest {
     @DisplayName("MCP Tools List 요청 처리")
     void handleMcp_toolsList() throws Exception {
         // given
-        String expectResponseBody = """
-            {
-              "jsonrpc": "2.0",
-              "id": 1,
-              "result": {
-                "tools": [
-                  {
-                    "name": "get_weather",
-                    "title": "Weather Information Provider",
-                    "description": "Get current weather information for a location",
-                    "inputSchema": {
-                      "type": "object",
-                      "properties": {
-                        "location": {
-                          "type": "string",
-                          "description": "City name or zip code"
-                        }
-                      },
-                      "required": ["location"]
-                    }
-                  }
-                ],
-                "nextCursor": "next-page-cursor"
-              }
-            }
-            """;
-
-        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
-            .thenReturn(objectMapper.readValue(expectResponseBody, McpResponse.class));
-
         String requestBody = """
             {
               "jsonrpc": "2.0",
@@ -255,7 +217,34 @@ class McpControllerTest {
             }
             """;
 
-        // when & then
+        //TODO ResponseBody의 정확한 응답을 검증하는 단계는 아직 미완성입니다.
+        McpResponse expectResponse = new ToolsListResponse(
+            1,
+            List.of(
+                new ToolInformation(
+                    "get_weather",
+//                    "Weather Information Provider",
+                    "Get current weather information for a location",
+                    Map.of(
+                        "type", "object",
+                        "properties", Map.of(
+                            "location", Map.of(
+                                "type", "string",
+                                "description", "City name or zip code"
+                            )
+                        ),
+                        "required", List.of("location")
+                    )
+//                    ,"nextCursor": "next-page-cursor"
+                )
+            )
+        );
+
+        // when
+        Mockito.when(mcpService.toolList(1))
+            .thenReturn(expectResponse);
+
+        // then
         mockMvc.perform(post("/mcp")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
@@ -271,7 +260,7 @@ class McpControllerTest {
                     fieldWithPath("jsonrpc").description("JSON-RPC 프로토콜 버전 (예: '2.0')"),
                     fieldWithPath("id").description("요청 식별자"),
                     fieldWithPath("result.tools[].name").description("툴 이름"),
-                    fieldWithPath("result.tools[].title").description("툴 표시 이름"),
+//                    fieldWithPath("result.tools[].title").description("툴 표시 이름"),
                     fieldWithPath("result.tools[].description").description("툴 설명"),
                     fieldWithPath("result.tools[].inputSchema.type").description(
                         "툴 입력 스키마 타입 (예: 'object')"),
@@ -282,8 +271,8 @@ class McpControllerTest {
                         "result.tools[].inputSchema.properties.location.description").description(
                         "입력 파라미터 설명"),
                     fieldWithPath("result.tools[].inputSchema.required[]").description(
-                        "필수 입력 파라미터 목록"),
-                    fieldWithPath("result.nextCursor").description("다음 페이지를 위한 커서 (Optional)")
+                        "필수 입력 파라미터 목록")
+//                    , fieldWithPath("result.nextCursor").description("다음 페이지를 위한 커서 (Optional)")
                 )
             ));
     }
@@ -292,25 +281,6 @@ class McpControllerTest {
     @DisplayName("MCP Tools Call 요청 처리")
     void handleMcp_toolsCall() throws Exception {
         // given
-        String expectResponseBody = """
-                {
-                  "jsonrpc": "2.0",
-                  "id": 2,
-                  "result": {
-                    "content": [
-                      {
-                        "type": "text",
-                        "text": "Current weather in New York:\\nTemperature: 72°F\\nConditions: Partly cloudy"
-                      }
-                    ],
-                    "isError": false
-                  }
-                }
-            """;
-
-        Mockito.when(mcpService.createResponse(any(McpRequest.class)))
-            .thenReturn(objectMapper.readValue(expectResponseBody, McpResponse.class));
-
         String requestBody = """
                 {
                   "jsonrpc": "2.0",
@@ -325,7 +295,21 @@ class McpControllerTest {
                 }
             """;
 
-        // when & then
+        ToolsCallResponse expectResponse = new ToolsCallResponse(
+            2,
+            List.of(
+                Map.of(
+                    "type", "text",
+                    "text",
+                    "Current weather in New York:\nTemperature: 72°F\nConditions: Partly cloudy"
+                )
+            )
+        );
+
+        // when
+        Mockito.when(mcpService.callTools(any(McpRequest.class))).thenReturn(expectResponse);
+
+        // then
         mockMvc.perform(post("/mcp")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))

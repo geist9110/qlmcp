@@ -2,12 +2,15 @@ package com.qlmcp.backend.service;
 
 import com.qlmcp.backend.config.McpProperties;
 import com.qlmcp.backend.config.ToolRegistry;
-import com.qlmcp.backend.dto.McpRequest;
-import com.qlmcp.backend.dto.McpResponse;
-import com.qlmcp.backend.dto.Method;
-import com.qlmcp.backend.exception.CustomException;
+import com.qlmcp.backend.dto.JsonRpcRequest.McpRequest;
+import com.qlmcp.backend.dto.JsonRpcRequest.ToolsCallRequest;
+import com.qlmcp.backend.dto.JsonRpcResponse.InitializeResponse;
+import com.qlmcp.backend.dto.JsonRpcResponse.McpResponse;
+import com.qlmcp.backend.dto.JsonRpcResponse.ToolsCallResponse;
+import com.qlmcp.backend.dto.JsonRpcResponse.ToolsListResponse;
 import com.qlmcp.backend.exception.ErrorCode;
-import java.util.HashMap;
+import com.qlmcp.backend.exception.McpException;
+import com.qlmcp.backend.tool.ToolInterface;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,83 +22,40 @@ public class McpService {
     private final McpProperties mcpProperties;
     private final ToolRegistry toolRegistry;
 
-    public McpResponse createResponse(McpRequest request) {
-        if (request.getMethod() == Method.INITIALIZE) {
-            return initialize(request.getId());
-        }
-
-        if (request.getMethod() == Method.NOTIFICATIONS_INITIALIZED) {
-            return null;
-        }
-
-        if (request.getMethod() == Method.TOOLS_LIST) {
-            return toolList(request.getId());
-        }
-
-        if (request.getMethod() == Method.TOOLS_CALL) {
-            return callTools(request);
-        }
-
-        throw new CustomException(ErrorCode.METHOD_NOT_FOUND);
+    public McpResponse initialize(Object requestId) {
+        return new InitializeResponse(
+            requestId,
+            mcpProperties.getProtocolVersion(),
+            "Optional instructions for the client",
+            Map.of(
+                "tools", Map.of()
+            ),
+            Map.of(
+                "name", mcpProperties.getServerName(),
+                "version", mcpProperties.getServerVersion()
+            )
+        );
     }
 
-    private McpResponse initialize(Object requestId) {
-        Map<String, Object> initializeResult = new HashMap<>();
-        initializeResult.put("protocolVersion", mcpProperties.getProtocolVersion());
-        initializeResult.put("capabilities", Map.of(
-            "tools", Map.of()
-        ));
-        initializeResult.put("serverInfo", Map.of(
-            "name", mcpProperties.getServerName(),
-            "version", mcpProperties.getServerVersion()
-        ));
-        initializeResult.put("instructions", "Optional instructions for the client");
-
-        return McpResponse.builder()
-            .id(requestId)
-            .result(initializeResult)
-            .build();
+    public McpResponse toolList(Object requestId) {
+        return new ToolsListResponse(
+            requestId,
+            toolRegistry.getToolInformationList()
+        );
     }
 
-    private McpResponse toolList(Object requestId) {
-        return McpResponse.builder()
-            .id(requestId)
-            .result(toolRegistry.getToolsList())
-            .build();
-    }
+    public McpResponse callTools(McpRequest request) {
+        ToolsCallRequest toolCallRequest = (ToolsCallRequest) request;
+        ToolsCallRequest.Params params = toolCallRequest.getParams();
+        ToolInterface tool = toolRegistry.getToolByName(params.getName());
 
-    private McpResponse callTools(McpRequest request) {
-        return McpResponse.builder()
-            .id(request.getId())
-            .result(switchingTools(request.getParams()))
-            .build();
-    }
-
-    private Map<String, Object> switchingTools(Object params) {
-        Map<?, ?> arguments = parseArguments(params);
-
-        Object tool = toolRegistry.getToolByName((String) ((Map<?, ?>) params).get("name"));
-
-        if (tool != null) {
-            try {
-                var method = tool.getClass().getMethod("call", Map.class);
-                return (Map<String, Object>) method.invoke(tool, arguments);
-            } catch (Exception e) {
-                throw new CustomException(ErrorCode.TOOL_EXECUTION_ERROR);
-            }
+        if (tool == null) {
+            throw new McpException(request.getId(), ErrorCode.TOOL_NOT_FOUND);
         }
 
-        throw new CustomException(ErrorCode.TOOL_NOT_FOUND);
-    }
-
-    private Map<?, ?> parseArguments(Object params) {
-        if (params instanceof Map) {
-            Object argumentsObj = ((Map<?, ?>) params).get("arguments");
-            if (argumentsObj instanceof Map) {
-                return (Map<?, ?>) argumentsObj;
-            }
-        }
-
-        throw new CustomException(ErrorCode.INVALID_PARAMS);
+        return new ToolsCallResponse(
+            request.getId(),
+            tool.call(request.getId(), params.getArguments())
+        );
     }
 }
