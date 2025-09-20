@@ -5,6 +5,24 @@ spring:
   config:
     import: optional:classpath:.env.${spring.profiles.active}[.properties]
 
+  ai:
+    mcp:
+      server:
+        name: qlmcp
+        version: 1.0.0
+        instructions: You are QL-MCP, an AI assistant designed to help users with their queries. Provide clear and concise answers.
+        capabilities:
+          prompt: false
+          tool: true
+          resource: false
+          completion: false
+        prompt-change-notification: true
+        resource-change-notification: false
+        tool-change-notification: true
+        sse-message-endpoint: /mcp/message
+        sse-endpoint: /sse
+        request-timeout: 60s
+
 ai:
   mcp:
     protocolVersion: 2025-06-18
