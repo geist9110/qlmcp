@@ -22,15 +22,4 @@ spring:
         sse-message-endpoint: /mcp/message
         sse-endpoint: /sse
         request-timeout: 60s
-
-ai:
-  mcp:
-    protocolVersion: 2025-06-18
-    serverName: qlmcp
-    serverVersion: 1.0.0
-
-  api:
-    key: ${AI_API_KEY}
-    baseUrl: ${AI_API_BASE_URL}
-    model: ${AI_API_MODEL}
-    type: ${AI_API_TYPE}
+        type: sync
