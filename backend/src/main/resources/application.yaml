@@ -21,5 +21,13 @@ spring:
         tool-change-notification: true
         sse-message-endpoint: /mcp/message
         sse-endpoint: /sse
-        request-timeout: 60s
+        request-timeout: 180s
         type: sync
+
+    openai:
+      api-key: ${AI_API_KEY}
+      base-url: ${AI_API_BASE_URL}
+      chat:
+        options:
+          model: ${AI_API_MODEL}
+          reasoning-effort: none
