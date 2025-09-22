@@ -24,6 +24,19 @@ spring:
         request-timeout: 180s
         type: sync
 
+      client:
+        enabled: true
+        initialized: true
+        name: qlmcp
+        request-timeout: 20s
+        root-change-notification: true
+        type: sync
+        version: 1.0.0
+        sse:
+          connections:
+            weather-mcp:
+              url: http://localhost:8888
+
     openai:
       api-key: ${AI_API_KEY}
       base-url: ${AI_API_BASE_URL}
