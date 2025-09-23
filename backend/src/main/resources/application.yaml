@@ -5,14 +5,42 @@ spring:
   config:
     import: optional:classpath:.env.${spring.profiles.active}[.properties]
 
-ai:
-  mcp:
-    protocolVersion: 2025-06-18
-    serverName: qlmcp
-    serverVersion: 1.0.0
+  ai:
+    mcp:
+      server:
+        name: ${SERVER_NAME}
+        version: ${SERVER_VERSION}
+        instructions: ${SERVER_INSTRUCTIONS}
+        capabilities:
+          prompt: false
+          tool: true
+          resource: false
+          completion: false
+        prompt-change-notification: true
+        resource-change-notification: false
+        tool-change-notification: true
+        sse-message-endpoint: ${SERVER_SSE_MESSAGE_ENDPOINT}
+        sse-endpoint: ${SERVER_SSE_END}
+        request-timeout: ${SERVER_REQUEST_TIMEOUT}
+        type: ${SERVER_TYPE}
 
-  api:
-    key: ${AI_API_KEY}
-    baseUrl: ${AI_API_BASE_URL}
-    model: ${AI_API_MODEL}
-    type: ${AI_API_TYPE}
+      client:
+        enabled: true
+        initialized: true
+        name: ${CLIENT_NAME}
+        request-timeout: ${CLIENT_REQUEST_TIMEOUT}
+        root-change-notification: true
+        type: sync
+        version: ${CLIENT_VERSION}
+        sse:
+          connections:
+            weather-mcp:
+              url: ${WEATHER_MCP_URL}
+
+    openai:
+      api-key: ${AI_API_KEY}
+      base-url: ${AI_API_BASE_URL}
+      chat:
+        options:
+          model: ${AI_API_MODEL}
+          reasoning-effort: ${AI_REASONING_EFFORT}
