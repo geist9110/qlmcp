@@ -33,9 +33,8 @@ public class ChatConfig {
         List<ToolCallback> toolCallbacks,
         ObjectProvider<List<McpSyncClient>> syncMcpClients
     ) {
-        List<McpSyncClient> mcpClients = syncMcpClients.stream().flatMap(List::stream).toList();
-        List<ToolCallbackProvider> tcbProviders = List.of(
-            new SyncMcpToolCallbackProvider(mcpClients));
+        List<ToolCallbackProvider> tcbProviders = List
+            .of(getSyncMcpToolCallbackProvider(syncMcpClients));
 
         List<ToolCallback> allFunctionAndToolCallbacks = new ArrayList<>(toolCallbacks);
         tcbProviders.stream()
@@ -58,10 +57,16 @@ public class ChatConfig {
         ChatClient.Builder chatClientBuilder,
         ObjectProvider<List<McpSyncClient>> syncMcpClients
     ) {
-        List<McpSyncClient> mcpClients = syncMcpClients.stream().flatMap(List::stream).toList();
-
         return chatClientBuilder
-            .defaultToolCallbacks(new SyncMcpToolCallbackProvider(mcpClients))
+            .defaultToolCallbacks(getSyncMcpToolCallbackProvider(syncMcpClients))
             .build();
+    }
+
+    // Bean으로 등록시 외부에 Tool이 노출되므로 등록하면 안된다.
+    private SyncMcpToolCallbackProvider getSyncMcpToolCallbackProvider(
+        ObjectProvider<List<McpSyncClient>> syncMcpClients
+    ) {
+        List<McpSyncClient> mcpClients = syncMcpClients.stream().flatMap(List::stream).toList();
+        return new SyncMcpToolCallbackProvider(mcpClients);
     }
 }
