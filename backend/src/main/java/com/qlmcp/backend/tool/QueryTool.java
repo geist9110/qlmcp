@@ -13,7 +13,7 @@ public class QueryTool {
     private final ChatClient chatClient;
 
     @Tool(name = "query", description = "Execute query with custom tools")
-    String query(@ToolParam(required = true) String query) {
+    String query(@ToolParam String query) {
         return chatClient
             .prompt(query)
             .call()
