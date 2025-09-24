@@ -13,7 +13,6 @@ import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
@@ -102,7 +101,10 @@ class BackendApplicationTests {
         );
 
         // 등록된 Tool들이 ToolCallbackResolver에서 모두 조회되는지 확인
-        for (McpSyncClient client : Objects.requireNonNull(syncMcpClients.getIfAvailable())) {
+        List<McpSyncClient> clients = syncMcpClients.getIfAvailable();
+        assertNotNull(clients);
+
+        for (McpSyncClient client : clients) {
             String clientName = client
                 .getClientInfo()
                 .name()
