@@ -24,6 +24,7 @@ import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 
 @SpringBootTest
@@ -43,6 +44,9 @@ class BackendApplicationTests {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @Autowired
     private Environment environment;
@@ -156,5 +160,14 @@ class BackendApplicationTests {
             getSyncToolCallbackProvider().getToolCallbacks().length,
             toolCallbacks.size()
         );
+    }
+
+    @Test
+    @DisplayName("Application Context가 SyncMcpToolCallbackProvider을 반환값으로 가지는 빈을 가지지 않는지 확인하는 테스트")
+    void noSyncMcpToolCallbackProviderBeanTest() {
+        Map<String, SyncMcpToolCallbackProvider> beans =
+            applicationContext.getBeansOfType(SyncMcpToolCallbackProvider.class);
+
+        assertEquals(0, beans.size());
     }
 }
