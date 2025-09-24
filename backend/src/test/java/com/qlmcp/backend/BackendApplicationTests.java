@@ -105,12 +105,7 @@ class BackendApplicationTests {
         assertNotNull(clients);
 
         for (McpSyncClient client : clients) {
-            String clientName = client
-                .getClientInfo()
-                .name()
-                .replaceAll("-", "_")
-                .replaceAll(" ", "") + "_";
-
+            String clientName = getNormalizedClientName(client);
             for (Tool tool : client.listTools().tools()) {
                 assertNotNull(toolCallbackResolver.resolve(clientName + tool.name()));
             }
@@ -123,6 +118,14 @@ class BackendApplicationTests {
                 actualToolCallbackMap.size()
             )
         );
+    }
+
+    private String getNormalizedClientName(McpSyncClient client) {
+        return client
+            .getClientInfo()
+            .name()
+            .replaceAll("-", "_")
+            .replaceAll(" ", "") + "_";
     }
 
     private SyncMcpToolCallbackProvider getSyncToolCallbackProvider() {
