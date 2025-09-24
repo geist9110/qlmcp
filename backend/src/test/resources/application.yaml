@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: test
+
+  config:
+    import: optional:classpath:.env.${spring.profiles.active}[.properties]
+
+  ai:
+    mcp:
+      server:
+        name: test-server-name
+        version: test-version
+        instructions: test-instructions
+        capabilities:
+          prompt: false
+          tool: true
+          resource: false
+          completion: false
+        prompt-change-notification: true
+        resource-change-notification: false
+        tool-change-notification: true
+        sse-message-endpoint: /sse/messages
+        sse-endpoint: /sse
+        request-timeout: 60s
+        type: sync
+
+      client:
+        enabled: true
+        initialized: true
+        name: test-client-name
+        request-timeout: 20s
+        root-change-notification: true
+        type: sync
+        version: test-client-version
+        sse:
+          connections:
+            weather-mcp:
+              url: http://localhost:8888
+
+    openai:
+      api-key: test-api-key
+      base-url: test-api-base-url
+      chat:
+        options:
+          model: test-model
+          reasoning-effort: none
