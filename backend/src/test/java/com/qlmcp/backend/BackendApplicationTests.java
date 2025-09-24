@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
@@ -33,8 +34,12 @@ class BackendApplicationTests {
 
     @Autowired
     ObjectProvider<List<McpSyncClient>> syncMcpClients;
+
     @Autowired
     private ToolCallbackResolver toolCallbackResolver;
+
+    @Autowired
+    private ChatClient chatClient;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -128,5 +133,28 @@ class BackendApplicationTests {
     private SyncMcpToolCallbackProvider getSyncToolCallbackProvider() {
         List<McpSyncClient> mcpClients = syncMcpClients.stream().flatMap(List::stream).toList();
         return new SyncMcpToolCallbackProvider(mcpClients);
+    }
+
+    @Test
+    @DisplayName("ChatClient가 외부 툴을 기본으로 가지는지 테스트")
+    void chatClientTest() throws NoSuchFieldException, IllegalAccessException {
+        // 1. DefaultChatClient에서 defaultChatClientRequest 필드 가져오기
+        Field defaultRequestField = chatClient.getClass()
+            .getDeclaredField("defaultChatClientRequest");
+        defaultRequestField.setAccessible(true);
+        Object defaultChatClientRequest = defaultRequestField.get(chatClient);
+
+        // 2. DefaultChatClientRequestSpec에서 toolCallbacks 리스트 가져오기
+        Field toolCallbacksField = defaultChatClientRequest.getClass()
+            .getDeclaredField("toolCallbacks");
+        toolCallbacksField.setAccessible(true);
+        List<ToolCallback> toolCallbacks = (List<ToolCallback>) toolCallbacksField.get(
+            defaultChatClientRequest);
+
+        // 3. assertEquals로 정확한 개수 검증
+        assertEquals(
+            getSyncToolCallbackProvider().getToolCallbacks().length,
+            toolCallbacks.size()
+        );
     }
 }
