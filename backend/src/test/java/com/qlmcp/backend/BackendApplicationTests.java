@@ -1,5 +1,6 @@
 package com.qlmcp.backend;
 
+import static com.qlmcp.backend.util.ReflectionHelper.getFieldValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -10,7 +11,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.spec.McpSchema.Tool;
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -90,6 +90,18 @@ class BackendApplicationTests {
     @Test
     @DisplayName("ToolCallbackResolver가 외부 툴만 불러오는지 테스트")
     void externalToolTest() {
+        List<?> actualResolver = getFieldValue(
+            toolCallbackResolver,
+            "toolCallbackResolvers",
+            List.class
+        );
+        Map<?, ?> actualToolCallbackMap = getFieldValue(
+            actualResolver.getFirst(),
+            "toolCallbacks",
+            Map.class
+        );
+
+        // 등록된 Tool들이 ToolCallbackResolver에서 모두 조회되는지 확인
         for (McpSyncClient client : Objects.requireNonNull(syncMcpClients.getIfAvailable())) {
             String clientName = client
                 .getClientInfo()
@@ -98,10 +110,7 @@ class BackendApplicationTests {
                 .replaceAll(" ", "") + "_";
 
             for (Tool tool : client.listTools().tools()) {
-                assertNotNull(
-                    toolCallbackResolver
-                        .resolve(clientName + tool.name())
-                );
+                assertNotNull(toolCallbackResolver.resolve(clientName + tool.name()));
             }
         }
 
@@ -109,29 +118,9 @@ class BackendApplicationTests {
             () -> assertNotNull(toolCallbackResolver),
             () -> assertEquals(
                 getSyncToolCallbackProvider().getToolCallbacks().length,
-                getToolCallbacksMap().size()
+                actualToolCallbackMap.size()
             )
         );
-    }
-
-    private Map<?, ?> getToolCallbacksMap()
-        throws NoSuchFieldException, IllegalAccessException {
-        // 1. DelegatingToolCallbackResolver의 resolvers 리스트 가져오기
-        Field resolversField = toolCallbackResolver
-            .getClass()
-            .getDeclaredField("toolCallbackResolvers");
-        resolversField.setAccessible(true);
-        List<?> resolvers = (List<?>) resolversField.get(toolCallbackResolver);
-
-        // 2. StaticToolCallbackResolver (첫 번째 resolver) 가져오기
-        Object staticResolver = resolvers.getFirst();
-
-        // 3. StaticToolCallbackResolver의 toolCallbacks Map 필드 가져오기
-        Field toolCallbacksField = staticResolver
-            .getClass()
-            .getDeclaredField("toolCallbacks");
-        toolCallbacksField.setAccessible(true);
-        return (Map<?, ?>) toolCallbacksField.get(staticResolver);
     }
 
     private SyncMcpToolCallbackProvider getSyncToolCallbackProvider() {
@@ -141,24 +130,22 @@ class BackendApplicationTests {
 
     @Test
     @DisplayName("ChatClient가 외부 툴을 기본으로 가지는지 테스트")
-    void chatClientTest() throws NoSuchFieldException, IllegalAccessException {
-        // 1. DefaultChatClient에서 defaultChatClientRequest 필드 가져오기
-        Field defaultRequestField = chatClient.getClass()
-            .getDeclaredField("defaultChatClientRequest");
-        defaultRequestField.setAccessible(true);
-        Object defaultChatClientRequest = defaultRequestField.get(chatClient);
+    void chatClientTest() {
+        Object defaultChatClientRequest = getFieldValue(
+            chatClient,
+            "defaultChatClientRequest",
+            Object.class
+        );
 
-        // 2. DefaultChatClientRequestSpec에서 toolCallbacks 리스트 가져오기
-        Field toolCallbacksField = defaultChatClientRequest.getClass()
-            .getDeclaredField("toolCallbacks");
-        toolCallbacksField.setAccessible(true);
-        List<ToolCallback> toolCallbacks = (List<ToolCallback>) toolCallbacksField.get(
-            defaultChatClientRequest);
+        List<?> actualToolCallbacks = getFieldValue(
+            defaultChatClientRequest,
+            "toolCallbacks",
+            List.class
+        );
 
-        // 3. assertEquals로 정확한 개수 검증
         assertEquals(
             getSyncToolCallbackProvider().getToolCallbacks().length,
-            toolCallbacks.size()
+            actualToolCallbacks.size()
         );
     }
 
