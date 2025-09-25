@@ -44,3 +44,4 @@ spring:
         options:
           model: test-model
           reasoning-effort: none
+          system-prompt: you are a helpful assistant.

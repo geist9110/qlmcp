@@ -20,7 +20,7 @@ spring:
         resource-change-notification: false
         tool-change-notification: true
         sse-message-endpoint: ${SERVER_SSE_MESSAGE_ENDPOINT}
-        sse-endpoint: ${SERVER_SSE_END}
+        sse-endpoint: ${SERVER_SSE_ENDPOINT}
         request-timeout: ${SERVER_REQUEST_TIMEOUT}
         type: ${SERVER_TYPE}
 
@@ -44,3 +44,4 @@ spring:
         options:
           model: ${AI_API_MODEL}
           reasoning-effort: ${AI_REASONING_EFFORT}
+          system-prompt: ${AI_SYSTEM_PROMPT}
