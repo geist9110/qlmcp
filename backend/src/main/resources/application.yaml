@@ -44,4 +44,8 @@ spring:
         options:
           model: ${AI_API_MODEL}
           reasoning-effort: ${AI_REASONING_EFFORT}
-          system-prompt: ${AI_SYSTEM_PROMPT}
+          prompt:
+            system-prompt: ${AI_SYSTEM_PROMPT}
+            user-prompt-start: ${AI_USER_PROMPT_START}
+            user-prompt-end: ${AI_USER_PROMPT_END}
+            log-tag: ${AI_LOG_TAG}

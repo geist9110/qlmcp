@@ -44,4 +44,8 @@ spring:
         options:
           model: test-model
           reasoning-effort: none
-          system-prompt: you are a helpful assistant.
+          prompt:
+            system-prompt: test-system-prompt
+            user-prompt-start: test-user-prompt-start
+            user-prompt-end: test-user-prompt-end
+            log-tag: <log>(.*?)</log>
