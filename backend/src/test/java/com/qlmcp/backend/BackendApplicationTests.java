@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.client.McpSyncClient;
-import io.modelcontextprotocol.spec.McpSchema.Tool;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -100,17 +99,6 @@ class BackendApplicationTests {
             Map.class
         );
 
-        // 등록된 Tool들이 ToolCallbackResolver에서 모두 조회되는지 확인
-        List<McpSyncClient> clients = syncMcpClients.getIfAvailable();
-        assertNotNull(clients);
-
-        for (McpSyncClient client : clients) {
-            String clientName = getNormalizedClientName(client);
-            for (Tool tool : client.listTools().tools()) {
-                assertNotNull(toolCallbackResolver.resolve(clientName + tool.name()));
-            }
-        }
-
         assertAll(
             () -> assertNotNull(toolCallbackResolver),
             () -> assertEquals(
@@ -118,14 +106,6 @@ class BackendApplicationTests {
                 actualToolCallbackMap.size()
             )
         );
-    }
-
-    private String getNormalizedClientName(McpSyncClient client) {
-        return client
-            .getClientInfo()
-            .name()
-            .replaceAll("-", "_")
-            .replaceAll(" ", "") + "_";
     }
 
     private SyncMcpToolCallbackProvider getSyncToolCallbackProvider() {

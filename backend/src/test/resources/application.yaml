@@ -34,8 +34,12 @@ spring:
         version: test-client-version
         sse:
           connections:
-            weather-mcp:
+            korea-weather-mcp:
               url: http://localhost:8888
+            context7-mcp:
+              url: http://localhost:8889
+            naver-search-mcp:
+              url: http://localhost:8890
 
     openai:
       api-key: test-api-key

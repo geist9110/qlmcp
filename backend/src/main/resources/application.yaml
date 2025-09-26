@@ -34,8 +34,12 @@ spring:
         version: ${CLIENT_VERSION}
         sse:
           connections:
-            weather-mcp:
-              url: ${WEATHER_MCP_URL}
+            korea-weather-mcp:
+              url: ${KOREA_WEATHER_MCP_URL}
+            context7-mcp:
+              url: ${CONTEXT7_MCP_URL}
+            naver-search-mcp:
+              url: ${NAVER_SEARCH_MCP_URL}
 
     openai:
       api-key: ${AI_API_KEY}
