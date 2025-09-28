@@ -3,7 +3,6 @@ package com.qlmcp.backend.config;
 import io.modelcontextprotocol.client.McpSyncClient;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Setter;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.tool.ToolCallback;
@@ -18,7 +17,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.support.GenericApplicationContext;
 
-@Setter
 @Configuration
 public class ChatConfig {
 
