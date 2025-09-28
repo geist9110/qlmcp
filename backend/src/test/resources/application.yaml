@@ -34,8 +34,12 @@ spring:
         version: test-client-version
         sse:
           connections:
-            weather-mcp:
+            korea-weather-mcp:
               url: http://localhost:8888
+            context7-mcp:
+              url: http://localhost:8889
+            naver-search-mcp:
+              url: http://localhost:8890
 
     openai:
       api-key: test-api-key
@@ -44,3 +48,8 @@ spring:
         options:
           model: test-model
           reasoning-effort: none
+          prompt:
+            system-prompt: test-system-prompt
+            user-prompt-start: test-user-prompt-start
+            user-prompt-end: test-user-prompt-end
+            log-tag: <log>(.*?)</log>

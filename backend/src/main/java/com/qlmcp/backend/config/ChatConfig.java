@@ -55,9 +55,11 @@ public class ChatConfig {
     @Bean
     public ChatClient chatClient(
         ChatClient.Builder chatClientBuilder,
-        ObjectProvider<List<McpSyncClient>> syncMcpClients
+        ObjectProvider<List<McpSyncClient>> syncMcpClients,
+        PromptConfig promptConfig
     ) {
         return chatClientBuilder
+            .defaultSystem(promptConfig.getSystemPrompt())
             .defaultToolCallbacks(getSyncMcpToolCallbackProvider(syncMcpClients))
             .build();
     }
