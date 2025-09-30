@@ -1,14 +1,23 @@
-import {Stack, StackProps, Tags} from 'aws-cdk-lib';
+import {Duration, Stack, StackProps, Tags} from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as route53 from 'aws-cdk-lib/aws-route53';
 import {Construct, IConstruct} from 'constructs';
 
 export class InfraStack extends Stack {
+  public readonly env: string;
   public readonly vpc: ec2.Vpc;
   public readonly mainServer: ec2.Instance;
   public readonly mcpServer: ec2.Instance;
 
-  constructor(scope: Construct, id: string, props?: StackProps) {
+  constructor(
+      scope: Construct,
+      id: string,
+      domainName: string,
+      env: string,
+      props?: StackProps
+  ) {
     super(scope, id, props);
+    this.env = env;
 
     this.vpc = new ec2.Vpc(this, 'qlmcp-vpc', {
       maxAzs: 1,
@@ -81,11 +90,24 @@ export class InfraStack extends Stack {
       securityGroup: mcpServerSg,
     })
     this.addTags(this.mcpServer, 'qlmcp-mcp-server');
+
+    const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+      domainName: domainName
+    });
+    new route53.ARecord(this, 'McpSubdomainRecord', {
+      zone: hostedZone,
+      recordName: 'mcp',
+      target: route53.RecordTarget.fromIpAddresses(
+          this.mainServer.instancePublicIp
+      ),
+      ttl: Duration.minutes(5),
+      comment: "Route mcp subdomain to main server"
+    })
   }
 
   private addTags(resource: IConstruct, name: string) {
     Tags.of(resource).add("Name", name);
     Tags.of(resource).add("Project", "qlmcp");
-    Tags.of(resource).add("Environment", "development");
+    Tags.of(resource).add("Environment", this.env);
   }
 }

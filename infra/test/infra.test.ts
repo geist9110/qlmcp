@@ -1,15 +1,25 @@
 import * as cdk from 'aws-cdk-lib';
+import * as dotenv from 'dotenv';
 import {Match, Template} from 'aws-cdk-lib/assertions';
 import {InfraStack} from '../lib/infra-stack';
+
+const env = "test";
+dotenv.config({path: `env/.env.${env}`});
 
 describe('InfraStack', () => {
   let app: cdk.App;
   let stack: InfraStack;
   let template: Template;
+  const domainName = process.env.DOMAIN_NAME!;
 
   beforeEach(() => {
     app = new cdk.App();
-    stack = new InfraStack(app, 'TestStack');
+    stack = new InfraStack(app, 'TestStack', domainName, env, {
+      env: {
+        account: process.env.AWS_ACCOUNT_ID,
+        region: process.env.AWS_REGION,
+      },
+    });
     template = Template.fromStack(stack);
   });
 
@@ -236,6 +246,24 @@ describe('InfraStack', () => {
             })
           ])
         })
+      })
+    })
+  })
+
+  describe("Route53 테스트", () => {
+    test("A 레코드가 메인 서버 인스턴스를 가리키는지 테스트", () => {
+      template.hasResourceProperties("AWS::Route53::RecordSet", {
+        Name: `mcp.${domainName}.`,
+        Type: 'A',
+        ResourceRecords: Match.arrayWith([
+          Match.objectLike({
+            'Fn::GetAtt': Match.arrayWith([
+              Match.stringLikeRegexp('qlmcpmainserver.*'),
+              'PublicIp'
+            ])
+          })
+        ]),
+        TTL: '300',
       })
     })
   })

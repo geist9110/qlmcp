@@ -1,20 +1,27 @@
 #!/usr/bin/env node
-import * as cdk from 'aws-cdk-lib';
+import {App} from 'aws-cdk-lib';
 import {InfraStack} from '../lib/infra-stack';
+import * as dotenv from 'dotenv';
 
-const app = new cdk.App();
-new InfraStack(app, 'InfraStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
+const env = process.env.NODE_ENV!;
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+if (!env) {
+  throw new Error('NODE_ENV is not defined');
+}
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
+dotenv.config({
+  path: `env/.env.${process.env.NODE_ENV}`,
+});
 
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+const domainName = process.env.DOMAIN_NAME!;
+if (!domainName) {
+  throw new Error('DOMAIN_NAME is not defined in environment variables');
+}
+
+const app = new App();
+new InfraStack(app, 'InfraStack', domainName, env, {
+  env: {
+    account: process.env.AWS_ACCOUNT_ID,
+    region: process.env.AWS_REGION,
+  }
 });
