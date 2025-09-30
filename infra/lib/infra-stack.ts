@@ -5,6 +5,7 @@ import {Construct, IConstruct} from 'constructs';
 export class InfraStack extends Stack {
   public readonly vpc: ec2.Vpc;
   public readonly mainServer: ec2.Instance;
+  public readonly mcpServer: ec2.Instance;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -53,6 +54,33 @@ export class InfraStack extends Stack {
       securityGroup: mainSeverSg,
     })
     this.addTags(this.mainServer, 'qlmcp-main-server');
+
+    const mcpServerSg = new ec2.SecurityGroup(this, 'qlmcp-mcp-sg', {
+      vpc: this.vpc,
+      allowAllOutbound: true,
+      securityGroupName: 'qlmcp-mcp-sg',
+      description: 'Security group for qlmcp mcp server',
+    })
+
+    mcpServerSg.addIngressRule(
+        ec2.Peer.securityGroupId(mainSeverSg.securityGroupId),
+        ec2.Port.allTraffic(),
+        'Allow all traffic from qlmcp main server',
+    )
+
+    this.mcpServer = new ec2.Instance(this, 'qlmcp-mcp-server', {
+      vpc: this.vpc,
+      instanceType: ec2.InstanceType.of(
+          ec2.InstanceClass.T3,
+          ec2.InstanceSize.MICRO,
+      ),
+      machineImage: ec2.MachineImage.latestAmazonLinux2023(),
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PUBLIC,
+      },
+      securityGroup: mcpServerSg,
+    })
+    this.addTags(this.mcpServer, 'qlmcp-mcp-server');
   }
 
   private addTags(resource: IConstruct, name: string) {
