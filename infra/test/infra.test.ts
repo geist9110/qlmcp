@@ -52,4 +52,107 @@ describe('InfraStack', () => {
       );
     })
   })
+
+  describe("메인 서버 테스트", () => {
+    test("인스턴스 타입 테스트", () => {
+      template.hasResourceProperties("AWS::EC2::Instance", {
+        Tags: Match.arrayWith([
+          {Key: 'Name', Value: 'qlmcp-main-server'}
+        ]),
+        InstanceType: 't3.small',
+      })
+    })
+
+    test("Machine Image 테스트", () => {
+      template.hasResourceProperties("AWS::EC2::Instance", {
+        Tags: Match.arrayWith([
+          {Key: 'Name', Value: 'qlmcp-main-server'}
+        ]),
+        ImageId: Match.objectLike({
+          Ref: Match.stringLikeRegexp('SsmParameterValue.*amazonlinuxlatestal2023.*')
+        })
+      })
+    })
+
+    test("Public Subnet에 배치되는지 테스트", () => {
+      template.hasResourceProperties("AWS::EC2::Instance", {
+        Tags: Match.arrayWith([
+          {Key: 'Name', Value: 'qlmcp-main-server'}
+        ]),
+        SubnetId: Match.objectLike({
+          Ref: Match.stringLikeRegexp('qlmcpvpcPublicSubnet.*')
+        })
+      })
+    })
+
+    test("Security Group 테스트", () => {
+      template.hasResourceProperties("AWS::EC2::Instance", {
+        Tags: Match.arrayWith([
+          {Key: 'Name', Value: 'qlmcp-main-server'}
+        ]),
+        SecurityGroupIds: Match.arrayWith([
+          Match.objectLike({
+            'Fn::GetAtt': Match.arrayWith([
+              Match.stringLikeRegexp('qlmcpmainsg.*'),
+              'GroupId'
+            ])
+          })
+        ])
+      })
+    })
+  })
+
+  describe("Security Group 테스트", () => {
+    test("메인 서버 Security Group이 IPv4에서 443 포트를 허용하는지 테스트", () => {
+      template.hasResourceProperties("AWS::EC2::SecurityGroup", {
+        GroupName: 'qlmcp-main-sg',
+        SecurityGroupIngress: Match.arrayWith([
+          Match.objectLike({
+            IpProtocol: 'tcp',
+            FromPort: 443,
+            ToPort: 443,
+            CidrIp: '0.0.0.0/0',
+          })
+        ])
+      })
+    })
+
+    test("메인 서버 Security Group이 IPv6에서 443 포트를 허용하는지 테스트", () => {
+      template.hasResourceProperties("AWS::EC2::SecurityGroup", {
+        GroupName: 'qlmcp-main-sg',
+        SecurityGroupIngress: Match.arrayWith([
+          Match.objectLike({
+            IpProtocol: 'tcp',
+            FromPort: 443,
+            ToPort: 443,
+            CidrIpv6: '::/0',
+          })
+        ])
+      })
+    })
+
+    test("메인 서버 Security Group의 Ingress 규칙이 2개인지 테스트", () => {
+      const securityGroups = template.findResources('AWS::EC2::SecurityGroup', {
+        Properties: {
+          GroupName: 'qlmcp-main-sg',
+        }
+      })
+
+      const sgKey = Object.keys(securityGroups)[0];
+      const ingressRules = securityGroups[sgKey].Properties.SecurityGroupIngress;
+      expect(ingressRules).toHaveLength(2);
+    })
+
+    test("메인 서버 Security Group이 모든 아웃바운드 트래픽을 허용하는지 테스트", () => {
+      template.hasResourceProperties("AWS::EC2::SecurityGroup", {
+        GroupName: 'qlmcp-main-sg',
+        SecurityGroupEgress: Match.arrayWith([
+          Match.objectLike({
+            IpProtocol: '-1',
+            CidrIp: '0.0.0.0/0',
+          })
+        ])
+      })
+    })
+  })
 });
