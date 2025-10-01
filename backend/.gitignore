@@ -36,5 +36,4 @@ out/
 .vscode/
 
 ### Env ###
-.env*
-*.p12
+/env

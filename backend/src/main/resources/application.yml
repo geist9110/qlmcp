@@ -2,9 +2,6 @@ spring:
   application:
     name: backend
 
-  config:
-    import: optional:classpath:.env.${spring.profiles.active}[.properties]
-
   ai:
     mcp:
       server:
