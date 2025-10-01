@@ -31,20 +31,20 @@ export class InfraStack extends Stack {
       ],
     });
 
-    const mainSeverSg = new ec2.SecurityGroup(this, 'qlmcp-main-sg', {
+    const mainServerSg = new ec2.SecurityGroup(this, 'qlmcp-main-sg', {
       vpc: this.vpc,
       allowAllOutbound: true,
       securityGroupName: 'qlmcp-main-sg',
       description: 'Security group for qlmcp main server',
     });
 
-    mainSeverSg.addIngressRule(
+    mainServerSg.addIngressRule(
         ec2.Peer.anyIpv4(),
         ec2.Port.tcp(443),
         'Allow HTTPS traffic from anywhere(IPv4)',
     )
 
-    mainSeverSg.addIngressRule(
+    mainServerSg.addIngressRule(
         ec2.Peer.anyIpv6(),
         ec2.Port.tcp(443),
         'Allow HTTPS traffic from anywhere(IPv6)',
@@ -60,7 +60,7 @@ export class InfraStack extends Stack {
       vpcSubnets: {
         subnetType: ec2.SubnetType.PUBLIC,
       },
-      securityGroup: mainSeverSg,
+      securityGroup: mainServerSg,
     })
     this.addTags(this.mainServer, 'qlmcp-main-server');
 
@@ -72,7 +72,7 @@ export class InfraStack extends Stack {
     })
 
     mcpServerSg.addIngressRule(
-        ec2.Peer.securityGroupId(mainSeverSg.securityGroupId),
+        ec2.Peer.securityGroupId(mainServerSg.securityGroupId),
         ec2.Port.allTraffic(),
         'Allow all traffic from qlmcp main server',
     )
