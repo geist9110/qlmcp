@@ -2,9 +2,6 @@ spring:
   application:
     name: backend
 
-  config:
-    import: optional:classpath:.env.${spring.profiles.active}[.properties]
-
   ai:
     mcp:
       server:
@@ -53,3 +50,12 @@ spring:
             user-prompt-start: ${AI_USER_PROMPT_START}
             user-prompt-end: ${AI_USER_PROMPT_END}
             log-tag: ${AI_LOG_TAG}
+
+server:
+  port: 443
+  ssl:
+    enabled: true
+    key-store: ${SSL_KEY_STORE}
+    key-store-password: ${SSL_KEY_STORE_PASSWORD}
+    key-store-type: ${SSL_TYPE}
+    key-alias: ${SSL_KEY_ALIAS}
