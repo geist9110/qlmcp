@@ -1,6 +1,7 @@
 import {Duration, Stack, StackProps, Tags} from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import {Construct, IConstruct} from 'constructs';
 
 export class InfraStack extends Stack {
@@ -50,6 +51,20 @@ export class InfraStack extends Stack {
         'Allow HTTPS traffic from anywhere(IPv6)',
     )
 
+    mainServerSg.addIngressRule(
+        ec2.Peer.anyIpv4(),
+        ec2.Port.tcp(80),
+        'Allow HTTP traffic from anywhere(IPv4)',
+    )
+
+    const mainServerRole = new iam.Role(this, 'qlmcp-main-server-role', {
+      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMManagedInstanceCore"),
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonS3ReadOnlyAccess")
+      ]
+    })
+
     this.mainServer = new ec2.Instance(this, 'qlmcp-main-server', {
       vpc: this.vpc,
       instanceType: ec2.InstanceType.of(
@@ -61,6 +76,7 @@ export class InfraStack extends Stack {
         subnetType: ec2.SubnetType.PUBLIC,
       },
       securityGroup: mainServerSg,
+      role: mainServerRole,
     })
     this.addTags(this.mainServer, 'qlmcp-main-server');
 
@@ -77,6 +93,14 @@ export class InfraStack extends Stack {
         'Allow all traffic from qlmcp main server',
     )
 
+    const mcpServerRole = new iam.Role(this, 'qlmcp-mcp-server-role', {
+      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonSSMManagedInstanceCore"),
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonS3ReadOnlyAccess")
+      ]
+    })
+
     this.mcpServer = new ec2.Instance(this, 'qlmcp-mcp-server', {
       vpc: this.vpc,
       instanceType: ec2.InstanceType.of(
@@ -88,6 +112,7 @@ export class InfraStack extends Stack {
         subnetType: ec2.SubnetType.PUBLIC,
       },
       securityGroup: mcpServerSg,
+      role: mcpServerRole,
     })
     this.addTags(this.mcpServer, 'qlmcp-mcp-server');
 

@@ -110,7 +110,41 @@ describe('InfraStack', () => {
         ])
       })
     })
+
+    test("Role이 인스턴스에 연결되는지 테스트", () => {
+      const resources = template.toJSON().Resources;
+
+      // 1. qlmcp-main-server 인스턴스 찾기
+      const [instanceId, instance] = Object.entries(resources).find(([_, res]: any) =>
+          res.Type === 'AWS::EC2::Instance' &&
+          res.Properties.Tags?.some((t: any) => t.Key === 'Name' && t.Value === 'qlmcp-main-server')
+      ) as [string, any];
+
+      expect(instance).toBeDefined();
+
+      // 2. 인스턴스가 참조하는 Profile 찾기
+      const profileRef = instance.Properties.IamInstanceProfile.Ref;
+      expect(profileRef).toBeDefined();
+
+      // 3. Profile 찾기
+      const profile = resources[profileRef];
+      expect(profile.Type).toBe('AWS::IAM::InstanceProfile');
+
+      // 4. Profile이 참조하는 Role 찾기
+      const roleRef = profile.Properties.Roles[0].Ref;
+      expect(roleRef).toMatch(/qlmcpmainserverrole.*/i);
+
+      // 5. Role이 올바른 권한을 가지는지
+      const role = resources[roleRef];
+      expect(role.Type).toBe('AWS::IAM::Role');
+      expect(role.Properties.ManagedPolicyArns).toBeDefined();
+
+      const policies = JSON.stringify(role.Properties.ManagedPolicyArns);
+      expect(policies).toMatch("AmazonSSMManagedInstanceCore");
+      expect(policies).toMatch("AmazonS3ReadOnlyAccess");
+    })
   })
+
 
   describe("MCP 서버 테스트", () => {
     test("인스턴스 타입 테스트", () => {
@@ -159,6 +193,39 @@ describe('InfraStack', () => {
         ])
       })
     })
+
+    test("Role이 인스턴스에 연결되는지 테스트", () => {
+      const resources = template.toJSON().Resources;
+
+      // 1. qlmcp-main-server 인스턴스 찾기
+      const [instanceId, instance] = Object.entries(resources).find(([_, res]: any) =>
+          res.Type === 'AWS::EC2::Instance' &&
+          res.Properties.Tags?.some((t: any) => t.Key === 'Name' && t.Value === 'qlmcp-mcp-server')
+      ) as [string, any];
+
+      expect(instance).toBeDefined();
+
+      // 2. 인스턴스가 참조하는 Profile 찾기
+      const profileRef = instance.Properties.IamInstanceProfile.Ref;
+      expect(profileRef).toBeDefined();
+
+      // 3. Profile 찾기
+      const profile = resources[profileRef];
+      expect(profile.Type).toBe('AWS::IAM::InstanceProfile');
+
+      // 4. Profile이 참조하는 Role 찾기
+      const roleRef = profile.Properties.Roles[0].Ref;
+      expect(roleRef).toMatch(/qlmcpmcpserverrole.*/i);
+
+      // 5. Role이 올바른 권한을 가지는지
+      const role = resources[roleRef];
+      expect(role.Type).toBe('AWS::IAM::Role');
+      expect(role.Properties.ManagedPolicyArns).toBeDefined();
+
+      const policies = JSON.stringify(role.Properties.ManagedPolicyArns);
+      expect(policies).toMatch("AmazonSSMManagedInstanceCore");
+      expect(policies).toMatch("AmazonS3ReadOnlyAccess");
+    })
   })
 
   describe("Security Group 테스트", () => {
@@ -193,7 +260,21 @@ describe('InfraStack', () => {
         })
       })
 
-      test("Ingress 규칙이 2개인지 테스트", () => {
+      test("IPv4에서 80 포트를 허용하는지 테스트", () => {
+        template.hasResourceProperties("AWS::EC2::SecurityGroup", {
+          GroupName: 'qlmcp-main-sg',
+          SecurityGroupIngress: Match.arrayWith([
+            Match.objectLike({
+              IpProtocol: 'tcp',
+              FromPort: 80,
+              ToPort: 80,
+              CidrIp: '0.0.0.0/0',
+            })
+          ])
+        })
+      })
+
+      test("Ingress 규칙이 3개인지 테스트", () => {
         const securityGroups = template.findResources('AWS::EC2::SecurityGroup', {
           Properties: {
             GroupName: 'qlmcp-main-sg',
@@ -202,7 +283,7 @@ describe('InfraStack', () => {
 
         const sgKey = Object.keys(securityGroups)[0];
         const ingressRules = securityGroups[sgKey].Properties.SecurityGroupIngress;
-        expect(ingressRules).toHaveLength(2);
+        expect(ingressRules).toHaveLength(3);
       })
 
       test("모든 아웃바운드 트래픽을 허용하는지 테스트", () => {
