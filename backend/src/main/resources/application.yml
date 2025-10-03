@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: backend
+
+  ai:
+    mcp:
+      server:
+        name: ${SERVER_NAME}
+        version: ${SERVER_VERSION}
+        instructions: ${SERVER_INSTRUCTIONS}
+        capabilities:
+          prompt: false
+          tool: true
+          resource: false
+          completion: false
+        prompt-change-notification: true
+        resource-change-notification: false
+        tool-change-notification: true
+        sse-message-endpoint: ${SERVER_SSE_MESSAGE_ENDPOINT}
+        sse-endpoint: ${SERVER_SSE_ENDPOINT}
+        request-timeout: ${SERVER_REQUEST_TIMEOUT}
+        type: ${SERVER_TYPE}
+
+      client:
+        enabled: true
+        initialized: true
+        name: ${CLIENT_NAME}
+        request-timeout: ${CLIENT_REQUEST_TIMEOUT}
+        root-change-notification: true
+        type: sync
+        version: ${CLIENT_VERSION}
+        sse:
+          connections:
+            korea-weather-mcp:
+              url: ${KOREA_WEATHER_MCP_URL}
+            context7-mcp:
+              url: ${CONTEXT7_MCP_URL}
+            naver-search-mcp:
+              url: ${NAVER_SEARCH_MCP_URL}
+
+    openai:
+      api-key: ${AI_API_KEY}
+      base-url: ${AI_API_BASE_URL}
+      chat:
+        options:
+          model: ${AI_API_MODEL}
+          reasoning-effort: ${AI_REASONING_EFFORT}
+          prompt:
+            system-prompt: ${AI_SYSTEM_PROMPT}
+            user-prompt-start: ${AI_USER_PROMPT_START}
+            user-prompt-end: ${AI_USER_PROMPT_END}
+            log-tag: ${AI_LOG_TAG}
+
+server:
+  port: 443
+  ssl:
+    enabled: true
+    key-store: ${SSL_KEY_STORE}
+    key-store-password: ${SSL_KEY_STORE_PASSWORD}
+    key-store-type: ${SSL_TYPE}
+    key-alias: ${SSL_KEY_ALIAS}
