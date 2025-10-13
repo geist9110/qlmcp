@@ -52,9 +52,9 @@ spring:
             log-tag: ${AI_LOG_TAG}
 
 server:
-  port: 443
+  port: ${SERVER_PORT}
   ssl:
-    enabled: true
+    enabled: ${SSL_ENABLED}
     key-store: ${SSL_KEY_STORE}
     key-store-password: ${SSL_KEY_STORE_PASSWORD}
     key-store-type: ${SSL_TYPE}
