@@ -16,10 +16,9 @@ spring:
         prompt-change-notification: true
         resource-change-notification: false
         tool-change-notification: true
-        sse-message-endpoint: ${SERVER_SSE_MESSAGE_ENDPOINT}
-        sse-endpoint: ${SERVER_SSE_ENDPOINT}
         request-timeout: ${SERVER_REQUEST_TIMEOUT}
         type: ${SERVER_TYPE}
+        protocol: ${SERVER_PROTOCOL}
 
       client:
         enabled: true
