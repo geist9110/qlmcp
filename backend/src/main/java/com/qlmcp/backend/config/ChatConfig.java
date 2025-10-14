@@ -69,6 +69,8 @@ public class ChatConfig {
         ObjectProvider<List<McpSyncClient>> syncMcpClients
     ) {
         List<McpSyncClient> mcpClients = syncMcpClients.stream().flatMap(List::stream).toList();
-        return new SyncMcpToolCallbackProvider(mcpClients);
+        return SyncMcpToolCallbackProvider.builder()
+            .mcpClients(mcpClients)
+            .build();
     }
 }
