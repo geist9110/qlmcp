@@ -33,4 +33,34 @@ public class WellknownController {
         log.info("=== Protected Resource Metadata Request END ===");
         return ResponseEntity.ok(metadata);
     }
+
+    @GetMapping("/oauth-authorization-server")
+    public ResponseEntity<Map<String, Object>> getAuthorizationServerMetadata(
+        HttpServletRequest request
+    ) {
+        log.info("=== Authorization Server Metadata Request START ===");
+
+        String baseUrl = request.getScheme() + "://"
+            + request.getServerName() + ":"
+            + request.getServerPort();
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("issuer", baseUrl);
+        metadata.put("authorization_endpoint", baseUrl + "/oauth2/authorize");
+        metadata.put("token_endpoint", baseUrl + "/oauth2/token");
+        metadata.put("jwks_uri", baseUrl + "/oauth2/jwks");
+        metadata.put("revocation_endpoint", baseUrl + "/oauth2/revoke");
+        metadata.put("introspection_endpoint", baseUrl + "/oauth2/introspect");
+
+        metadata.put("response_types_supported", List.of("code"));
+        metadata.put("grant_types_supported", List.of("authorization_code", "refresh_token"));
+        metadata.put("token_endpoint_auth_methods_supported",
+            List.of("client_secret_basic", "client_secret_post"));
+        metadata.put("code_challenge_methods_supported", List.of("S256"));
+        metadata.put("scopes_supported", List.of("mcp.read", "mcp.write"));
+
+        log.info("Returning metadata: {}", metadata);
+        log.info("=== Authorization Server Metadata Request END ===");
+        return ResponseEntity.ok(metadata);
+    }
 }
