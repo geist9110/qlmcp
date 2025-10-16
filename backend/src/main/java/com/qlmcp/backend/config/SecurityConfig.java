@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -24,63 +23,29 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class SecurityConfig {
 
     @Bean
-    @Order(1)
-    public SecurityFilterChain wellknwonFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/.well-known/**")
-            .authorizeHttpRequests(
-                authorize -> authorize.anyRequest().permitAll()
-            )
             .csrf(AbstractHttpConfigurer::disable)
-            .addFilterBefore(
-                new LoggingFilter("Well-known Filter"),
-                UsernamePasswordAuthenticationFilter.class
-            )
-        ;
-        return http.build();
-    }
-
-    @Bean
-    @Order(2)
-    public SecurityFilterChain loginFilterChain(HttpSecurity http) throws Exception {
-        http
-            .securityMatcher("/login", "/oauth2/**")
             .authorizeHttpRequests(
                 authorize -> authorize
+                    .requestMatchers("/.well-known/**").permitAll()
+                    .requestMatchers("/login/**").permitAll()
+                    .requestMatchers("/mcp/**").authenticated()
+                    .requestMatchers("/oauth2/register").permitAll()
                     .requestMatchers("/oauth2/authorize").authenticated()
-                    .anyRequest().permitAll()
-            )
-            .csrf(AbstractHttpConfigurer::disable)
-            .addFilterBefore(
-                new LoggingFilter("Login Filter"),
-                UsernamePasswordAuthenticationFilter.class
-            ).formLogin(
-                form -> form
-                    .loginPage("/login")
-                    .permitAll()
-            )
-        ;
-        return http.build();
-    }
-
-    @Bean
-    @Order(3)
-    public SecurityFilterChain mcpFilterChain(HttpSecurity http) throws Exception {
-        http
-            .securityMatcher("/mcp/**")
-            .authorizeHttpRequests(authorize -> authorize
-                .anyRequest().authenticated()
+                    .anyRequest().denyAll()
             )
             .oauth2ResourceServer(
                 oauth2 -> oauth2.jwt(Customizer.withDefaults())
                     .authenticationEntryPoint(new MCPAUthenticationEntryPoint())
             )
-            .csrf(AbstractHttpConfigurer::disable)
+            .oauth2Login(Customizer.withDefaults())
             .addFilterBefore(
-                new LoggingFilter("MCP Filter"),
+                new LoggingFilter("HTTP Reqeust"),
                 UsernamePasswordAuthenticationFilter.class
             )
         ;
+
         return http.build();
     }
 
