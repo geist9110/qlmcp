@@ -58,7 +58,7 @@ public class WellknownController {
         metadata.put("token_endpoint_auth_methods_supported",
             List.of("client_secret_basic", "client_secret_post"));
         metadata.put("code_challenge_methods_supported", List.of("S256"));
-        metadata.put("scopes_supported", List.of("mcp.read", "mcp.write"));
+        metadata.put("scopes_supported", List.of("openid"));
 
         log.info("Returning metadata: {}", metadata);
         log.info("=== Authorization Server Metadata Request END ===");

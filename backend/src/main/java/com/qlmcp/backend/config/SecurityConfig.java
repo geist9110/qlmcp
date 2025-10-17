@@ -1,5 +1,6 @@
 package com.qlmcp.backend.config;
 
+import com.qlmcp.backend.util.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +21,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -37,7 +41,9 @@ public class SecurityConfig {
                     .anyRequest().denyAll()
             )
             .oauth2ResourceServer(
-                oauth2 -> oauth2.jwt(Customizer.withDefaults())
+                oauth2 -> oauth2.jwt(
+                        jwt -> jwt.decoder(jwtTokenProvider.getJwtDecoder())
+                    )
                     .authenticationEntryPoint(new MCPAUthenticationEntryPoint())
             )
             .oauth2Login(Customizer.withDefaults())
