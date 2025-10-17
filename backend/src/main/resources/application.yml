@@ -76,3 +76,8 @@ server:
     key-store-password: ${SSL_KEY_STORE_PASSWORD}
     key-store-type: ${SSL_TYPE}
     key-alias: ${SSL_KEY_ALIAS}
+
+jwt:
+  secret: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  access-token-validity: 3600
+  refresh-token-validity: 2592000

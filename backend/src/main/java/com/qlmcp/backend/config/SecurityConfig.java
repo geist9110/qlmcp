@@ -32,6 +32,7 @@ public class SecurityConfig {
                     .requestMatchers("/login/**").permitAll()
                     .requestMatchers("/mcp/**").authenticated()
                     .requestMatchers("/oauth2/register").permitAll()
+                    .requestMatchers("/oauth2/token").permitAll()
                     .requestMatchers("/oauth2/authorize").authenticated()
                     .anyRequest().denyAll()
             )
