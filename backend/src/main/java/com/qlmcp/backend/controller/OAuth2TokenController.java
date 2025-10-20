@@ -92,9 +92,9 @@ public class OAuth2TokenController {
         }
 
         // 3. 클라이언트 일치 검증
-//        if (!authCode.getClientId().equals(client.getClientId())) {
-//            throw new OAuth2AuthorizationException(new OAuth2Error("Client mismatch"));
-//        }
+        if (!authCode.getClientId().equals(client.getClientId())) {
+            throw new OAuth2AuthorizationException(new OAuth2Error("Client mismatch"));
+        }
 
         // 4. redirect_uri 검증
         if (!authCode.getRedirectUri().equals(redirectUri)) {

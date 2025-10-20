@@ -34,9 +34,6 @@ public class DynamicClientRegistrationController {
         String clientId = UUID.randomUUID().toString();
         String clientSecret = UUID.randomUUID().toString();
 
-        log.info("Client Id: {}", clientId);
-        log.info("Client Secret: {}", clientSecret);
-
         RegisteredClient client = RegisteredClient
             .withId(UUID.randomUUID().toString())
             .clientId(clientId)
