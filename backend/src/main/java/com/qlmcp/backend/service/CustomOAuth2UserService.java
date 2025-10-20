@@ -1,8 +1,9 @@
 package com.qlmcp.backend.service;
 
+import com.qlmcp.backend.dto.AuthProvider;
 import com.qlmcp.backend.entity.Account;
-import com.qlmcp.backend.entity.Account.AuthProvider;
 import com.qlmcp.backend.repository.AccountRepository;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -33,17 +34,47 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         log.info("Current user: {}", oAuth2User.getAttributes());
         log.info("=========================================");
 
-        Account account = accountRepository
-            .findByProviderAndProviderId(authProvider,
-                oAuth2User.getAttributes().get("id").toString())
-            .orElseGet(() -> {
+        OAuth2UserInfo oAuth2UserInfo = getOAuth2UserInfo(
+            authProvider,
+            oAuth2User.getAttributes()
+        );
+
+        accountRepository
+            .findByProviderAndProviderId(
+                authProvider,
+                oAuth2UserInfo.getProviderId()
+            ).orElseGet(() -> {
                 Account newAccount = new Account(
                     authProvider,
-                    oAuth2User.getAttributes().get("id").toString()
+                    oAuth2UserInfo.getProviderId()
                 );
                 return accountRepository.save(newAccount);
             });
 
         return oAuth2User;
+    }
+
+    private OAuth2UserInfo getOAuth2UserInfo(
+        AuthProvider authProvider,
+        Map<String, Object> attributes
+    ) {
+        if (authProvider == AuthProvider.GITHUB) {
+            return new GithubOAuth2UserInfo(attributes);
+        }
+
+        throw new OAuth2AuthenticationException("Unsupported OAuth2 provider: " + authProvider);
+    }
+
+    private interface OAuth2UserInfo {
+
+        String getProviderId();
+    }
+
+    private record GithubOAuth2UserInfo(Map<String, Object> attributes) implements OAuth2UserInfo {
+
+        @Override
+        public String getProviderId() {
+            return attributes.get("id").toString();
+        }
     }
 }

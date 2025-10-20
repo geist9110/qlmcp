@@ -1,7 +1,7 @@
 package com.qlmcp.backend.repository;
 
+import com.qlmcp.backend.dto.AuthProvider;
 import com.qlmcp.backend.entity.Account;
-import com.qlmcp.backend.entity.Account.AuthProvider;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;

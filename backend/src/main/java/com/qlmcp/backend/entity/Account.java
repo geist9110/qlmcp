@@ -1,5 +1,6 @@
 package com.qlmcp.backend.entity;
 
+import com.qlmcp.backend.dto.AuthProvider;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -9,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.util.UUID;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
@@ -16,6 +18,7 @@ import lombok.NoArgsConstructor;
 @Table(uniqueConstraints = {
     @UniqueConstraint(columnNames = {"provider", "providerId"})
 })
+@Getter
 public class Account {
 
     @Id
@@ -31,7 +34,5 @@ public class Account {
         this.providerId = providerId;
     }
 
-    public enum AuthProvider {
-        GITHUB,
-    }
+
 }
