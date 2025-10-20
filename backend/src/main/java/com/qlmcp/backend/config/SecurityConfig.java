@@ -1,5 +1,6 @@
 package com.qlmcp.backend.config;
 
+import com.qlmcp.backend.service.CustomOAuth2UserService;
 import com.qlmcp.backend.util.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.AuthenticationException;
@@ -25,6 +25,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -46,7 +47,12 @@ public class SecurityConfig {
                     )
                     .authenticationEntryPoint(new MCPAUthenticationEntryPoint())
             )
-            .oauth2Login(Customizer.withDefaults())
+            .oauth2Login(
+                oauth -> oauth
+//                    .loginPage("/login")
+                    .userInfoEndpoint(userInfo -> userInfo
+                        .userService(customOAuth2UserService))
+            )
             .addFilterBefore(
                 new LoggingFilter("HTTP Request"),
                 UsernamePasswordAuthenticationFilter.class
