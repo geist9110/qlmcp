@@ -48,7 +48,7 @@ public class SecurityConfig {
             )
             .oauth2Login(Customizer.withDefaults())
             .addFilterBefore(
-                new LoggingFilter("HTTP Reqeust"),
+                new LoggingFilter("HTTP Request"),
                 UsernamePasswordAuthenticationFilter.class
             )
         ;
