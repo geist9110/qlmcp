@@ -1,6 +1,7 @@
 package com.qlmcp.backend.entity;
 
 import com.qlmcp.backend.dto.AuthProvider;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -26,6 +27,7 @@ public class Account {
     private UUID id;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private AuthProvider provider;
     private String providerId;
 

@@ -62,6 +62,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             return new GithubOAuth2UserInfo(attributes);
         }
 
+        if (authProvider == AuthProvider.GOOGLE) {
+            return new GoogleOAuth2UserInfo(attributes);
+        }
+
         throw new OAuth2AuthenticationException("Unsupported OAuth2 provider: " + authProvider);
     }
 
@@ -75,6 +79,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         @Override
         public String getProviderId() {
             return attributes.get("id").toString();
+        }
+    }
+
+    private record GoogleOAuth2UserInfo(Map<String, Object> attributes) implements OAuth2UserInfo {
+
+        @Override
+        public String getProviderId() {
+            return attributes.get("sub").toString();
         }
     }
 }
