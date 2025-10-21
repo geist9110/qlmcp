@@ -89,6 +89,8 @@ button {
   background-color: #F9FAFB;
   transition: background-color 0.3s ease-in-out;
 
+  border: 1px solid #364153;
+
   &:hover {
     background-color: #F3F4F6;
   }
