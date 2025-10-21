@@ -45,11 +45,7 @@
 }
 
 .container-gap {
-  @media (min-width: 1920px) {
-    gap: 56px;
-  }
-
-  @media (max-width: 1919px) and (min-width: 768px) {
+  @media (min-width: 768px) {
     gap: 40px;
   }
 
