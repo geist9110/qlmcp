@@ -1,0 +1,109 @@
+/* Flex box */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-row {
+  flex-direction: row;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+/* Width & Height */
+.h-screen {
+  height: 100vh;
+}
+
+.w-screen {
+  width: 100vw;
+}
+
+/* Colors */
+/* bg colors */
+.bg-gray-50 {
+  background-color: #F9FAFB;
+}
+
+/* border colors */
+.border-gray-700 {
+  border-color: #364153;
+}
+
+/* Spacing */
+.g-2 {
+  gap: 8px;
+}
+
+.g-14 {
+  gap: 56px;
+}
+
+/* padding */
+.p-2 {
+  padding: 8px;
+}
+
+/* Font */
+.bold {
+  font-weight: bold;
+}
+
+.text-heading-3 {
+  font-size: 32px;
+  line-height: 130%;
+}
+
+.text-heading-4 {
+  font-size: 24px;
+  line-height: 130%;
+}
+
+.text-body-medium {
+  font-size: 16px;
+  line-height: 150%;
+}
+
+/* border radius */
+.rounded-lg {
+  border-radius: 8px;
+}
+
+/* border width */
+.border-1 {
+  border-width: 1px;
+}
+
+/* Transition */
+button {
+  cursor: pointer;
+  background-color: #F9FAFB;
+  transition: background-color 0.3s ease-in-out;
+
+  &:hover {
+    background-color: #F3F4F6;
+  }
+
+  &:active {
+    background-color: #E5E7EB;
+  }
+}
+
+
+/* Other */
+p {
+  color: #364153;
+}
+
+body {
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+}

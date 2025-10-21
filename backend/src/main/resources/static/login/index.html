@@ -1,10 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Title</title>
+  <title>QLMCP</title>
+  <link href="
+https://cdn.jsdelivr.net/npm/reset-css@5.0.2/reset.min.css
+" rel="stylesheet">
+  <link href="../css/styles.css" rel="stylesheet">
+  <link href="login.css" rel="stylesheet">
+  <link as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css"
+        rel="stylesheet"/>
 </head>
 <body>
-Login Page
+
+<div class="h-screen w-screen flex flex-col justify-center items-center bg-gray-50 g-14">
+  <img alt="QLMCP Logo" class="brand-logo" src="../image/brand-logo.svg">
+  <div class="flex flex-col justify-center items-center g-2">
+    <p class="text-heading-3 bold">QLMCP에 오신 것을 환영합니다.</p>
+    <p class="text-heading-4">소셜 계정으로 간편하겐 시작하세요</p>
+  </div>
+  <div class="flex flex-col g-2">
+    <button
+        class="flex justify-center items-center border-gray-700 rounded-lg p-2 border-1 bg-gray-50">
+      <div class="flex flex-row g-2">
+        <img alt="Github" class="social-logo" src="../image/google-logo.svg"/>
+        <p class="text-body-medium">Google 계정으로 시작하기</p>
+      </div>
+    </button>
+    <button
+        class="flex justify-center items-center border-gray-700 rounded-lg p-2 border-1 bg-gray-50">
+      <div class="flex flex-row g-2">
+        <img alt="Github" class="social-logo" src="../image/github-logo.svg"/>
+        <p class="text-body-medium">Github 계정으로 시작하기</p>
+      </div>
+    </button>
+  </div>
+</div>
+
 </body>
 </html>
