@@ -34,7 +34,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(
                 authorize -> authorize
                     .requestMatchers("/.well-known/**").permitAll()
-                    .requestMatchers("/login/**").permitAll()
+                    .requestMatchers("/login/**", "/image/**", "/css/**")
+                    .permitAll()
                     .requestMatchers("/mcp").authenticated()
                     .requestMatchers("/oauth2/register").permitAll()
                     .requestMatchers("/oauth2/token").permitAll()
