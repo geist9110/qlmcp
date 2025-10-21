@@ -45,7 +45,7 @@ public class SecurityConfig {
                 oauth2 -> oauth2.jwt(
                         jwt -> jwt.decoder(jwtTokenProvider.getJwtDecoder())
                     )
-                    .authenticationEntryPoint(new MCPAUthenticationEntryPoint())
+                    .authenticationEntryPoint(new MCPAuthenticationEntryPoint())
             )
             .oauth2Login(
                 oauth -> oauth
@@ -62,7 +62,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    private static class MCPAUthenticationEntryPoint implements AuthenticationEntryPoint {
+    private static class MCPAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         @Override
         public void commence(
