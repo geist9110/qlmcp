@@ -40,16 +40,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         );
 
         accountRepository
-            .findByProviderAndProviderId(
-                authProvider,
-                oAuth2UserInfo.getProviderId()
-            ).orElseGet(() -> {
-                Account newAccount = new Account(
-                    authProvider,
-                    oAuth2UserInfo.getProviderId()
-                );
-                return accountRepository.save(newAccount);
-            });
+            .findByProviderAndProviderId(authProvider, oAuth2UserInfo.getProviderId())
+            .orElseGet(() -> accountRepository.save(
+                    new Account(authProvider, oAuth2UserInfo.getProviderId())
+                )
+            );
 
         return oAuth2User;
     }
