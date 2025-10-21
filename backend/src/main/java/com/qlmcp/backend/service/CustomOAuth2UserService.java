@@ -78,7 +78,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         @Override
         public String getProviderId() {
-            return attributes.get("id").toString();
+            return String.valueOf(attributes.get("id"));
         }
     }
 
@@ -86,7 +86,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         @Override
         public String getProviderId() {
-            return attributes.get("sub").toString();
+            return String.valueOf(attributes.get("sub"));
         }
     }
 }
