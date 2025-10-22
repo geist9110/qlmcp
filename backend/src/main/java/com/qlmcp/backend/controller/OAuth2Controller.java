@@ -5,6 +5,7 @@ import com.qlmcp.backend.entity.AuthorizationCode;
 import com.qlmcp.backend.entity.RefreshToken;
 import com.qlmcp.backend.repository.AuthorizationCodeRepository;
 import com.qlmcp.backend.repository.RefreshTokenRepository;
+import com.qlmcp.backend.service.OAuth2Service;
 import com.qlmcp.backend.util.JwtTokenProvider;
 import com.qlmcp.backend.util.PkceVerifier;
 import java.security.Principal;
@@ -40,19 +41,14 @@ public class OAuth2Controller {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PkceVerifier pkceVerifier;
+    private final OAuth2Service oAuth2Service;
 
     @Value("${jwt.refresh-token-validity}")
     private int refreshTokenValidity;
 
     @GetMapping("/providers")
     public ResponseEntity<List<OAuthProviderResponseDto>> getProviders() {
-        return ResponseEntity
-            .ok(
-                List.of(
-                    new OAuthProviderResponseDto("google", "/oauth2/login/google"),
-                    new OAuthProviderResponseDto("github", "/oauth2/login/github")
-                )
-            );
+        return ResponseEntity.ok(oAuth2Service.getProviders());
     }
 
     @GetMapping("/authorize")
