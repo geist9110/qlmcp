@@ -34,13 +34,21 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(
                 authorize -> authorize
+                    // Well known
                     .requestMatchers("/.well-known/**").permitAll()
+
+                    // Resources
                     .requestMatchers("/login/**", "/image/**", "/css/**", "/script/**").permitAll()
-                    .requestMatchers("/api/auth/providers").permitAll()
+
+                    // MCP
                     .requestMatchers("/mcp").authenticated()
+
+                    // OAuth
                     .requestMatchers("/oauth2/authorize").authenticated()
-                    .requestMatchers("/oauth2/register").permitAll()
-                    .requestMatchers("/oauth2/token").permitAll()
+                    .requestMatchers("/oauth2/providers", "/oauth2/register", "/oauth2/token")
+                    .permitAll()
+
+                    // Others
                     .anyRequest().denyAll()
             )
             .oauth2ResourceServer(
