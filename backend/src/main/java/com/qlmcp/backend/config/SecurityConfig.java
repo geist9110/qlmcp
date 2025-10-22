@@ -29,6 +29,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(
@@ -37,9 +38,10 @@ public class SecurityConfig {
                     .requestMatchers("/login/**", "/image/**", "/css/**", "/script/**").permitAll()
                     .requestMatchers("/api/auth/providers").permitAll()
                     .requestMatchers("/mcp").authenticated()
+                    .requestMatchers("/oauth2/authorize").authenticated()
                     .requestMatchers("/oauth2/register").permitAll()
                     .requestMatchers("/oauth2/token").permitAll()
-                    .requestMatchers("/oauth2/authorize").authenticated()
+                    .requestMatchers("/oauth2/callback").permitAll()
                     .anyRequest().denyAll()
             )
             .oauth2ResourceServer(
@@ -51,6 +53,10 @@ public class SecurityConfig {
             .oauth2Login(
                 oauth -> oauth
                     .loginPage("/login")
+                    .authorizationEndpoint(
+                        endpoint -> endpoint
+                            .baseUri("/oauth2/login")
+                    )
                     .userInfoEndpoint(userInfo -> userInfo
                         .userService(customOAuth2UserService))
             )
@@ -108,10 +114,16 @@ public class SecurityConfig {
 
             String authHeader = request.getHeader("Authorization");
             if (authHeader != null) {
-                log.info("Authorization: {}", authHeader
-                );
+                log.info("Authorization: {}", authHeader);
             } else {
                 log.info("Authorization: (none)");
+            }
+
+            String redirectUri = request.getHeader("Location");
+            if (redirectUri != null) {
+                log.info("Redirect URI: {}", redirectUri);
+            } else {
+                log.info("Redirect URI: (none)");
             }
 
             try {

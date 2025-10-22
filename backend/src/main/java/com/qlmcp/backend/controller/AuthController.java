@@ -14,8 +14,8 @@ public class AuthController {
     @GetMapping("/providers")
     public ResponseEntity<List<OAuthProviderResponseDto>> getOAuthProviders() {
         List<OAuthProviderResponseDto> providers = List.of(
-            new OAuthProviderResponseDto("google", "/oauth2/authorization/google"),
-            new OAuthProviderResponseDto("github", "/oauth2/authorization/github")
+            new OAuthProviderResponseDto("google", "/oauth2/login/google"),
+            new OAuthProviderResponseDto("github", "/oauth2/login/github")
         );
         return ResponseEntity.ok(providers);
     }
