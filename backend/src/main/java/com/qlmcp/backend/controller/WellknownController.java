@@ -46,12 +46,12 @@ public class WellknownController {
 
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("issuer", baseUrl);
-        metadata.put("registration_endpoint", baseUrl + "/oauth2/register");
+        metadata.put("registration_endpoint", baseUrl + "/dcr/register");
         metadata.put("authorization_endpoint", baseUrl + "/oauth2/authorize");
         metadata.put("token_endpoint", baseUrl + "/oauth2/token");
-        metadata.put("jwks_uri", baseUrl + "/oauth2/jwks");
-        metadata.put("revocation_endpoint", baseUrl + "/oauth2/revoke");
-        metadata.put("introspection_endpoint", baseUrl + "/oauth2/introspect");
+//        metadata.put("jwks_uri", baseUrl + "/oauth2/jwks");
+//        metadata.put("revocation_endpoint", baseUrl + "/oauth2/revoke");
+//        metadata.put("introspection_endpoint", baseUrl + "/oauth2/introspect");
 
         metadata.put("response_types_supported", List.of("code"));
         metadata.put("grant_types_supported", List.of("authorization_code", "refresh_token"));

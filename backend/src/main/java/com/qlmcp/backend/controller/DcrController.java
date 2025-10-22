@@ -13,16 +13,18 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-public class DynamicClientRegistrationController {
+@RequestMapping("/dcr")
+public class DcrController {
 
     private final RegisteredClientRepository registeredClientRepository;
 
-    @PostMapping("/oauth2/register")
+    @PostMapping("/register")
     public ResponseEntity<ClientRegistrationResponse> registerClient(
         @RequestBody ClientRegistrationRequest request
     ) {

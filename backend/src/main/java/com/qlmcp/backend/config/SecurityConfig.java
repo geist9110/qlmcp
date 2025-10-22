@@ -45,8 +45,10 @@ public class SecurityConfig {
 
                     // OAuth
                     .requestMatchers("/oauth2/authorize").authenticated()
-                    .requestMatchers("/oauth2/providers", "/oauth2/register", "/oauth2/token")
-                    .permitAll()
+                    .requestMatchers("/oauth2/providers", "/oauth2/token").permitAll()
+
+                    // DCR
+                    .requestMatchers("/dcr/register").permitAll()
 
                     // Others
                     .anyRequest().denyAll()
