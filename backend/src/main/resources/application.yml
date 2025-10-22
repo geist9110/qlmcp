@@ -57,9 +57,11 @@ spring:
           github:
             client-id: ${GITHUB_CLIENT_ID}
             client-secret: ${GITHUB_CLIENT_SECRET}
+            redirect-uri: http://localhost:8080/oauth2/callback/github
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: http://localhost:8080/oauth2/callback/google
             scope:
               - email
               - profile

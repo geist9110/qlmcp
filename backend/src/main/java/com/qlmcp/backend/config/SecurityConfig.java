@@ -41,7 +41,6 @@ public class SecurityConfig {
                     .requestMatchers("/oauth2/authorize").authenticated()
                     .requestMatchers("/oauth2/register").permitAll()
                     .requestMatchers("/oauth2/token").permitAll()
-                    .requestMatchers("/oauth2/callback").permitAll()
                     .anyRequest().denyAll()
             )
             .oauth2ResourceServer(
@@ -56,6 +55,9 @@ public class SecurityConfig {
                     .authorizationEndpoint(
                         endpoint -> endpoint
                             .baseUri("/oauth2/login")
+                    )
+                    .redirectionEndpoint(endpoint -> endpoint
+                        .baseUri("/oauth2/callback/*")
                     )
                     .userInfoEndpoint(userInfo -> userInfo
                         .userService(customOAuth2UserService))
