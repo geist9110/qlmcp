@@ -34,8 +34,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(
                 authorize -> authorize
                     .requestMatchers("/.well-known/**").permitAll()
-                    .requestMatchers("/login/**").permitAll()
-                    .requestMatchers("/mcp/**").authenticated()
+                    .requestMatchers("/login/**", "/image/**", "/css/**", "/script/**").permitAll()
+                    .requestMatchers("/api/auth/providers").permitAll()
+                    .requestMatchers("/mcp").authenticated()
                     .requestMatchers("/oauth2/register").permitAll()
                     .requestMatchers("/oauth2/token").permitAll()
                     .requestMatchers("/oauth2/authorize").authenticated()
@@ -49,7 +50,7 @@ public class SecurityConfig {
             )
             .oauth2Login(
                 oauth -> oauth
-//                    .loginPage("/login")
+                    .loginPage("/login")
                     .userInfoEndpoint(userInfo -> userInfo
                         .userService(customOAuth2UserService))
             )

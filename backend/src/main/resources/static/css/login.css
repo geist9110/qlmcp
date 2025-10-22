@@ -1,0 +1,16 @@
+.brand-logo {
+  @media (min-width: 768px) {
+    width: 128px;
+    height: 128px;
+  }
+
+  @media (max-width: 767px) {
+    width: 96px;
+    height: 96px;
+  }
+}
+
+.social-logo {
+  width: 24px;
+  height: 24px;
+}
