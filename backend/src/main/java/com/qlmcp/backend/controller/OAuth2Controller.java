@@ -3,6 +3,8 @@ package com.qlmcp.backend.controller;
 import com.qlmcp.backend.dto.OAuthProviderResponseDto;
 import com.qlmcp.backend.entity.AuthorizationCode;
 import com.qlmcp.backend.entity.RefreshToken;
+import com.qlmcp.backend.exection.CustomException;
+import com.qlmcp.backend.exection.ErrorCode;
 import com.qlmcp.backend.repository.AuthorizationCodeRepository;
 import com.qlmcp.backend.repository.RefreshTokenRepository;
 import com.qlmcp.backend.service.OAuth2Service;
@@ -15,9 +17,9 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthorizationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -52,7 +54,7 @@ public class OAuth2Controller {
     }
 
     @GetMapping("/authorize")
-    public String authorize(
+    public ResponseEntity<?> authorize(
         @RequestParam("client_id") String clientId,
         @RequestParam("redirect_uri") String redirectUri,
         @RequestParam("code_challenge") String codeChallenge,
@@ -69,44 +71,29 @@ public class OAuth2Controller {
         log.info("Authenticated Principal: {}", principal.getName());
 
         if (!"code".equals(responseType)) {
-            return redirectWithError(
-                redirectUri,
-                "unsupported_response_type",
-                "Only 'code' response type is supported",
-                state
-            );
+            throw CustomException.badRequest(ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
         }
 
         RegisteredClient client = registeredClientRepository.findByClientId(clientId);
         if (client == null) {
-            return redirectWithError(
-                redirectUri,
-                "invalid_client",
-                "Client not found",
-                state
-            );
+            throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
         }
 
         if (!client.getRedirectUris().contains(redirectUri)) {
-            throw new OAuth2AuthenticationException("invalid_redirect_uri");
+            throw CustomException.badRequest(ErrorCode.INVALID_REDIRECT_URI);
         }
 
         if (codeChallenge == null || codeChallengeMethod == null) {
-            return redirectWithError(
-                redirectUri,
-                "invalid_request",
-                "PKCE parameters are required",
-                state
+            throw CustomException.redirect(
+                ErrorCode.PKCE_REQUIRED,
+                buildRedirectUri(redirectUri, state)
             );
         }
 
-        if (!"S256".equals(codeChallengeMethod)
-            && !"plain".equals(codeChallengeMethod)) {
-            return redirectWithError(
-                redirectUri,
-                "invalid_request",
-                "Unsupported code_challenge_method",
-                state
+        if (!"S256".equals(codeChallengeMethod) && !"plain".equals(codeChallengeMethod)) {
+            throw CustomException.redirect(
+                ErrorCode.UNSUPPORTED_CODE_CHALLENGE_METHOD,
+                buildRedirectUri(redirectUri, state)
             );
         }
 
@@ -128,11 +115,28 @@ public class OAuth2Controller {
         );
         log.info("=== Authorization Request END ===");
 
-        return "redirect:" + buildRedirectUri(
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.LOCATION, buildRedirectUri(
             redirectUri,
             authCode.getCode(),
             state
-        );
+        ));
+
+        return ResponseEntity
+            .status(HttpStatus.FOUND)
+            .headers(headers)
+            .build();
+    }
+
+    private String buildRedirectUri(String redirectUri, String state) {
+        UriComponentsBuilder builder = UriComponentsBuilder
+            .fromUriString(redirectUri);
+
+        if (!state.isEmpty()) {
+            builder.queryParam("state", state);
+        }
+
+        return builder.build().toUriString();
     }
 
     private String buildRedirectUri(String redirectUri, String code, String state) {
@@ -144,19 +148,6 @@ public class OAuth2Controller {
         }
 
         return builder.toUriString();
-    }
-
-    private String redirectWithError(String redirectUri, String error,
-        String errorDescription, String state) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(redirectUri)
-            .queryParam("error", error)
-            .queryParam("error_description", errorDescription);
-
-        if (state != null) {
-            builder.queryParam("state", state);
-        }
-
-        return "redirect:" + builder.toUriString();
     }
 
     @PostMapping("/token")

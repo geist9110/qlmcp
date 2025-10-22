@@ -13,4 +13,8 @@ public class OAuth2Service {
             new OAuthProviderResponseDto("github", "/oauth2/login/github")
         );
     }
+
+    public String getToken() {
+        return "Bearer ";
+    }
 }
