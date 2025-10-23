@@ -1,10 +1,9 @@
 package com.qlmcp.backend.controller;
 
+import com.qlmcp.backend.dto.AuthorizeDto;
 import com.qlmcp.backend.dto.OAuthProviderResponseDto;
 import com.qlmcp.backend.entity.AuthorizationCode;
 import com.qlmcp.backend.entity.RefreshToken;
-import com.qlmcp.backend.exection.CustomException;
-import com.qlmcp.backend.exection.ErrorCode;
 import com.qlmcp.backend.repository.AuthorizationCodeRepository;
 import com.qlmcp.backend.repository.RefreshTokenRepository;
 import com.qlmcp.backend.service.OAuth2Service;
@@ -62,7 +61,6 @@ public class OAuth2Controller {
         @RequestParam("response_type") String responseType,
         @RequestParam(required = false) String scope,
         @RequestParam(required = false) String state,
-        @RequestParam(required = false) String resource,
         Principal principal
     ) {
         log.info("=== Authorization Request START ===");
@@ -70,47 +68,22 @@ public class OAuth2Controller {
         log.info("Redirect URI: {}", redirectUri);
         log.info("Authenticated Principal: {}", principal.getName());
 
-        if (!"code".equals(responseType)) {
-            throw CustomException.badRequest(ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
-        }
-
-        RegisteredClient client = registeredClientRepository.findByClientId(clientId);
-        if (client == null) {
-            throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
-        }
-
-        if (!client.getRedirectUris().contains(redirectUri)) {
-            throw CustomException.badRequest(ErrorCode.INVALID_REDIRECT_URI);
-        }
-
-        if (codeChallenge == null || codeChallengeMethod == null) {
-            throw CustomException.redirect(
-                ErrorCode.PKCE_REQUIRED,
-                buildRedirectUri(redirectUri, state)
-            );
-        }
-
-        if (!"S256".equals(codeChallengeMethod) && !"plain".equals(codeChallengeMethod)) {
-            throw CustomException.redirect(
-                ErrorCode.UNSUPPORTED_CODE_CHALLENGE_METHOD,
-                buildRedirectUri(redirectUri, state)
-            );
-        }
-
-        AuthorizationCode authCode = new AuthorizationCode(
-            principal.getName(),
-            clientId,
-            redirectUri,
-            codeChallenge,
-            codeChallengeMethod,
-            scope,
-            state
+        String authCode = oAuth2Service.getAuthorizeCode(
+            AuthorizeDto.builder()
+                .responseType(responseType)
+                .scope(scope)
+                .state(state)
+                .redirectUri(redirectUri)
+                .codeChallenge(codeChallenge)
+                .codeChallengeMethod(codeChallengeMethod)
+                .clientId(clientId)
+                .userName(principal.getName())
+                .build()
         );
-        authorizationCodeRepository.save(authCode);
 
         log.info(
             "Authorization Code Issued - code: {}, user: {}",
-            authCode.getCode(),
+            authCode,
             principal.getName()
         );
         log.info("=== Authorization Request END ===");
@@ -118,7 +91,7 @@ public class OAuth2Controller {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.LOCATION, buildRedirectUri(
             redirectUri,
-            authCode.getCode(),
+            authCode,
             state
         ));
 
@@ -126,17 +99,6 @@ public class OAuth2Controller {
             .status(HttpStatus.FOUND)
             .headers(headers)
             .build();
-    }
-
-    private String buildRedirectUri(String redirectUri, String state) {
-        UriComponentsBuilder builder = UriComponentsBuilder
-            .fromUriString(redirectUri);
-
-        if (!state.isEmpty()) {
-            builder.queryParam("state", state);
-        }
-
-        return builder.build().toUriString();
     }
 
     private String buildRedirectUri(String redirectUri, String code, String state) {
