@@ -1,6 +1,7 @@
 package com.qlmcp.backend.controller;
 
 import com.qlmcp.backend.dto.AuthorizeDto;
+import com.qlmcp.backend.dto.ClientCredential;
 import com.qlmcp.backend.dto.OAuthProviderResponseDto;
 import com.qlmcp.backend.entity.AuthorizationCode;
 import com.qlmcp.backend.entity.RefreshToken;
@@ -127,7 +128,7 @@ public class OAuth2Controller {
 
         try {
             // 클라이언트 인증
-            ClientCredentials credentials = extractClientCredentials(
+            ClientCredential credentials = extractClientCredentials(
                 authHeader, clientId,
                 clientSecret);
             RegisteredClient client = authenticateClient(credentials);
@@ -262,7 +263,7 @@ public class OAuth2Controller {
         ));
     }
 
-    private ClientCredentials extractClientCredentials(
+    private ClientCredential extractClientCredentials(
         String authHeader, String clientId, String clientSecret) {
 
         // Basic Auth 헤더에서 추출
@@ -271,44 +272,45 @@ public class OAuth2Controller {
             String credentials = new String(Base64.getDecoder().decode(base64Credentials));
             String[] parts = credentials.split(":", 2);
 
-            return new ClientCredentials(parts[0],
-                parts.length > 1 ? parts[1] : null);
+            return ClientCredential.builder()
+                .clientId(parts[0])
+                .clientSecret(parts.length > 1 ? parts[1] : null)
+                .build();
         }
 
-        // Body 파라미터에서 추출
-        return new ClientCredentials(clientId, clientSecret);
+        return ClientCredential.builder()
+            .clientId(clientId)
+            .clientSecret(clientSecret)
+            .build();
     }
 
     private RegisteredClient authenticateClient(
-        ClientCredentials credentials) {
-        if (credentials.clientId() == null) {
+        ClientCredential credentials) {
+        if (credentials.getClientId() == null) {
             throw new OAuth2AuthorizationException(
                 new OAuth2Error("Client authentication required"));
         }
 
-        RegisteredClient client = registeredClientRepository.findByClientId(credentials.clientId());
+        RegisteredClient client = registeredClientRepository.findByClientId(
+            credentials.getClientId());
         if (client == null) {
             throw new OAuth2AuthorizationException(new OAuth2Error("Unknown client"));
         }
 
         // client_secret 검증
-        if (credentials.clientSecret() != null) {
+        if (credentials.getClientSecret() != null) {
             String storedSecret = client.getClientSecret();
             // {noop} 제거
             if (storedSecret.startsWith("{noop}")) {
                 storedSecret = storedSecret.substring(6);
             }
 
-            if (!storedSecret.equals(credentials.clientSecret())) {
+            if (!storedSecret.equals(credentials.getClientSecret())) {
                 throw new OAuth2AuthorizationException(
                     new OAuth2Error("Invalid client credentials"));
             }
         }
 
         return client;
-    }
-
-    private record ClientCredentials(String clientId, String clientSecret) {
-
     }
 }
