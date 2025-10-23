@@ -3,14 +3,16 @@ package com.qlmcp.backend.controller;
 
 import com.qlmcp.backend.dto.ClientRegistrationRequest;
 import com.qlmcp.backend.dto.ClientRegistrationResponse;
+import com.qlmcp.backend.entity.Client;
+import com.qlmcp.backend.repository.ClientRepository;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/dcr")
 public class DcrController {
 
-    private final RegisteredClientRepository registeredClientRepository;
+    private final ClientRepository clientRepository;
 
     @PostMapping("/register")
     public ResponseEntity<ClientRegistrationResponse> registerClient(
@@ -33,33 +35,38 @@ public class DcrController {
         log.info("Client Name: {}", request.clientName());
         log.info("Redirect URIs: {}", request.redirectUris());
 
-        String clientId = UUID.randomUUID().toString();
-        String clientSecret = UUID.randomUUID().toString();
+        Client client = clientRepository
+            .findByClientName(request.clientName())
+            .orElseGet(
+                () -> {
+                    Client newClient = Client.builder()
+                        .id(UUID.randomUUID().toString())
+                        .clientId(UUID.randomUUID().toString())
+                        .clientSecret(UUID.randomUUID().toString())
+                        .clientName(request.clientName())
+                        .redirectUris(new HashSet<>(request.redirectUris()))
+                        .authorizationGrantTypes(Set.of(
+                                AuthorizationGrantType.AUTHORIZATION_CODE,
+                                AuthorizationGrantType.REFRESH_TOKEN
+                            )
+                        )
+                        .authenticationMethods(
+                            Set.of(ClientAuthenticationMethod.CLIENT_SECRET_BASIC))
+                        .scopes(Set.of("openid"))
+                        .build();
 
-        RegisteredClient client = RegisteredClient
-            .withId(UUID.randomUUID().toString())
-            .clientId(clientId)
-            .clientSecret(clientSecret)
-            .clientName(request.clientName())
-            .redirectUris(uris -> uris.addAll(request.redirectUris()))
-            .authorizationGrantTypes(types -> {
-                types.add(AuthorizationGrantType.AUTHORIZATION_CODE);
-                types.add(AuthorizationGrantType.REFRESH_TOKEN);
-            })
-            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-            .scope("openid")
-            .build();
+                    return clientRepository.save(newClient);
+                }
+            );
 
-        registeredClientRepository.save(client);
-
-        log.info("Client Id: {}", clientId);
-        log.info("Client Secret: {}", clientSecret);
+        log.info("Client Id: {}", client.getClientId());
+        log.info("Client Secret: {}", client.getClientSecret());
         log.info("=== Dynamic Client Registration Request END ===");
 
         return ResponseEntity.ok(
             new ClientRegistrationResponse(
-                clientId,
-                clientSecret,
+                client.getClientId(),
+                client.getClientSecret(),
                 request.redirectUris()
             )
         );
