@@ -20,6 +20,22 @@ public enum ErrorCode {
         "OAUTH_003",
         "unsupported code challenge method"
     ),
+    INVALID_CODE(
+        "OAUTH_004",
+        "invalid code"
+    ),
+    INVALID_TOKEN(
+        "OAUTH_005",
+        "invalid token"
+    ),
+    REFRESH_TOKEN_EXPIRED(
+        "OAUTH_006",
+        "refresh token expired"
+    ),
+    INVALID_GRANT_TYPE(
+        "OAUTH_007",
+        "invalid grant type"
+    ),
 
     // Client Error
     INVALID_CLIENT(
