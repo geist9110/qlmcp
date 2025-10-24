@@ -87,7 +87,24 @@ public class OAuth2Service {
         return authCode.getCode();
     }
 
-    public ClientCredential getClientCredential(
+    public TokenDto getToken(String grantType, String code, String codeVerifier, String redirectUri,
+        String clientId, String clientSecret, String refreshTokenValue, String authHeader) {
+        ClientCredential clientCredential = getClientCredential(authHeader, clientId, clientSecret);
+
+        Client client = authenticateClient(clientCredential);
+
+        if (grantType.equals("authorization_code")) {
+            return handleAuthorizationCodeGrant(code, codeVerifier, redirectUri, client);
+        }
+
+        if (grantType.equals("refresh_token")) {
+            return handleRefreshTokenGrant(refreshTokenValue, client);
+        }
+
+        throw CustomException.badRequest(ErrorCode.INVALID_GRANT_TYPE);
+    }
+
+    private ClientCredential getClientCredential(
         String authHeader,
         String clientId,
         String clientSecret
@@ -109,7 +126,7 @@ public class OAuth2Service {
             .build();
     }
 
-    public Client authenticateClient(ClientCredential clientCredential) {
+    private Client authenticateClient(ClientCredential clientCredential) {
         if (clientCredential.getClientId() == null) {
             throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
         }
@@ -133,7 +150,7 @@ public class OAuth2Service {
         return client;
     }
 
-    public TokenDto handleAuthorizationCodeGrant(
+    private TokenDto handleAuthorizationCodeGrant(
         String code,
         String codeVerifier,
         String redirectUri,
@@ -181,7 +198,7 @@ public class OAuth2Service {
             .build();
     }
 
-    public TokenDto handleRefreshTokenGrant(String refreshTokenValue, Client client) {
+    private TokenDto handleRefreshTokenGrant(String refreshTokenValue, Client client) {
         RefreshToken refreshToken = refreshTokenRepository
             .findByToken(refreshTokenValue)
             .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_TOKEN));

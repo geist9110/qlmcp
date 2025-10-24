@@ -1,12 +1,8 @@
 package com.qlmcp.backend.controller;
 
 import com.qlmcp.backend.dto.AuthorizeDto;
-import com.qlmcp.backend.dto.ClientCredential;
 import com.qlmcp.backend.dto.OAuthProviderResponseDto;
 import com.qlmcp.backend.dto.TokenDto;
-import com.qlmcp.backend.entity.Client;
-import com.qlmcp.backend.exection.CustomException;
-import com.qlmcp.backend.exection.ErrorCode;
 import com.qlmcp.backend.service.OAuth2Service;
 import java.security.Principal;
 import java.util.List;
@@ -97,7 +93,7 @@ public class OAuth2Controller {
     }
 
     @PostMapping("/token")
-    public ResponseEntity<TokenDto> token(
+    public ResponseEntity<TokenDto> getToken(
         @RequestParam("grant_type") String grantType,
         @RequestParam(value = "code", required = false) String code,
         @RequestParam(value = "code_verifier", required = false) String codeVerifier,
@@ -107,31 +103,17 @@ public class OAuth2Controller {
         @RequestParam(value = "refresh_token", required = false) String refreshTokenValue,
         @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
-        ClientCredential credentials = oAuth2Service.getClientCredential(
-            authHeader,
-            clientId,
-            clientSecret
+        return ResponseEntity.ok(
+            oAuth2Service.getToken(
+                grantType,
+                code,
+                codeVerifier,
+                redirectUri,
+                clientId,
+                clientSecret,
+                refreshTokenValue,
+                authHeader
+            )
         );
-
-        Client client = oAuth2Service.authenticateClient(credentials);
-
-        if ("authorization_code".equals(grantType)) {
-            return ResponseEntity.ok(
-                oAuth2Service.handleAuthorizationCodeGrant(
-                    code,
-                    codeVerifier,
-                    redirectUri,
-                    client
-                )
-            );
-        }
-
-        if ("refresh_token".equals(grantType)) {
-            return ResponseEntity.ok(
-                oAuth2Service.handleRefreshTokenGrant(refreshTokenValue, client)
-            );
-        }
-
-        throw CustomException.badRequest(ErrorCode.INVALID_GRANT_TYPE);
     }
 }
