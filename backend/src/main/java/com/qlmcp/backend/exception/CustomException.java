@@ -1,4 +1,4 @@
-package com.qlmcp.backend.exection;
+package com.qlmcp.backend.exception;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

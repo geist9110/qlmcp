@@ -1,4 +1,4 @@
-package com.qlmcp.backend.exection;
+package com.qlmcp.backend.exception;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
