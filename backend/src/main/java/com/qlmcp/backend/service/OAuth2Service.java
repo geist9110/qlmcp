@@ -194,7 +194,7 @@ public class OAuth2Service {
             .tokenType("Bearer")
             .expiresIn(jwtTokenProvider.getAccessTokenValidity())
             .refreshToken(refreshToken.getToken())
-            .scope(authCode.getCode())
+            .scope(authCode.getScope())
             .build();
     }
 
