@@ -1,6 +1,6 @@
 async function loadOAuthProviders() {
   try {
-    const response = await fetch('/api/auth/providers');
+    const response = await fetch('/oauth2/providers');
     const providers = await response.json();
 
     const container = document.getElementById('oauth-buttons');

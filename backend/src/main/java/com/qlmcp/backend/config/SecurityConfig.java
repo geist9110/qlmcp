@@ -29,17 +29,28 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(
                 authorize -> authorize
+                    // Well known
                     .requestMatchers("/.well-known/**").permitAll()
+
+                    // Resources
                     .requestMatchers("/login/**", "/image/**", "/css/**", "/script/**").permitAll()
-                    .requestMatchers("/api/auth/providers").permitAll()
+
+                    // MCP
                     .requestMatchers("/mcp").authenticated()
-                    .requestMatchers("/oauth2/register").permitAll()
-                    .requestMatchers("/oauth2/token").permitAll()
+
+                    // OAuth
                     .requestMatchers("/oauth2/authorize").authenticated()
+                    .requestMatchers("/oauth2/providers", "/oauth2/token").permitAll()
+
+                    // DCR
+                    .requestMatchers("/dcr/register").permitAll()
+
+                    // Others
                     .anyRequest().denyAll()
             )
             .oauth2ResourceServer(
@@ -51,6 +62,13 @@ public class SecurityConfig {
             .oauth2Login(
                 oauth -> oauth
                     .loginPage("/login")
+                    .authorizationEndpoint(
+                        endpoint -> endpoint
+                            .baseUri("/oauth2/login")
+                    )
+                    .redirectionEndpoint(endpoint -> endpoint
+                        .baseUri("/oauth2/callback/*")
+                    )
                     .userInfoEndpoint(userInfo -> userInfo
                         .userService(customOAuth2UserService))
             )
@@ -108,10 +126,16 @@ public class SecurityConfig {
 
             String authHeader = request.getHeader("Authorization");
             if (authHeader != null) {
-                log.info("Authorization: {}", authHeader
-                );
+                log.info("Authorization: {}", authHeader);
             } else {
                 log.info("Authorization: (none)");
+            }
+
+            String redirectUri = request.getHeader("Location");
+            if (redirectUri != null) {
+                log.info("Redirect URI: {}", redirectUri);
+            } else {
+                log.info("Redirect URI: (none)");
             }
 
             try {
