@@ -34,11 +34,12 @@ QLMCP는 자연어 요청만으로 여러 MCP(Model Context Protocol) 서버들�
 
 ## 🗺️ 로드맵
 
-### v1.0.0(현재 버전)
+### v1.1.0(현재 버전)
 
 - 기본 query 툴 사용 가능
 - 3개 MCP 서버 통합
-- SSE 프로토콜 지원
+- STREAMABLE-HTTP 지원
+- 소셜 로그인(Google, Github) 지원
 
 ### 향후 계획
 
