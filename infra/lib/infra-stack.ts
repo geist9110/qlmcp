@@ -1,7 +1,10 @@
-import {Duration, Stack, StackProps, Tags} from 'aws-cdk-lib';
+import {Duration, RemovalPolicy, SecretValue, Stack, StackProps, Tags} from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import {SecurityGroup} from 'aws-cdk-lib/aws-ec2';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as rds from 'aws-cdk-lib/aws-rds';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import {Construct, IConstruct} from 'constructs';
 
 export class InfraStack extends Stack {
@@ -9,11 +12,14 @@ export class InfraStack extends Stack {
   public readonly vpc: ec2.Vpc;
   public readonly mainServer: ec2.Instance;
   public readonly mcpServer: ec2.Instance;
+  public readonly database: rds.DatabaseInstance;
 
   constructor(
       scope: Construct,
       id: string,
       domainName: string,
+      databaseUser: string,
+      databasePassword: string,
       env: string,
       props?: StackProps
   ) {
@@ -21,7 +27,7 @@ export class InfraStack extends Stack {
     this.env = env;
 
     this.vpc = new ec2.Vpc(this, 'qlmcp-vpc', {
-      maxAzs: 1,
+      maxAzs: 2,
       natGateways: 0,
       subnetConfiguration: [
         {
@@ -29,6 +35,11 @@ export class InfraStack extends Stack {
           subnetType: ec2.SubnetType.PUBLIC,
           cidrMask: 24,
         },
+        {
+          name: 'Private',
+          subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+          cidrMask: 24,
+        }
       ],
     });
 
@@ -127,6 +138,55 @@ export class InfraStack extends Stack {
       ),
       ttl: Duration.minutes(5),
       comment: "Route mcp subdomain to main server"
+    })
+
+    // SSM Parameter store
+    new ssm.StringParameter(this, 'qlmcp-db-user', {
+      parameterName: '/qlmcp/db/user',
+      stringValue: databaseUser,
+      tier: ssm.ParameterTier.STANDARD,
+    })
+
+    new ssm.StringParameter(this, 'qlmcp-db-password', {
+      parameterName: '/qlmcp/db/password',
+      stringValue: databasePassword,
+      tier: ssm.ParameterTier.STANDARD
+    })
+
+    const databaseSG = new SecurityGroup(this, 'qlmcp-databaseSG', {
+      vpc: this.vpc,
+      allowAllOutbound: true,
+      securityGroupName: 'qlmcp-database-sg',
+      description: 'Security group for qlmcp database',
+    });
+
+    databaseSG.addIngressRule(
+        ec2.Peer.securityGroupId(mainServerSg.securityGroupId),
+        ec2.Port.tcp(3306)
+    );
+
+    const database = new rds.DatabaseInstance(this, 'qlmcp-database', {
+      engine: rds.DatabaseInstanceEngine.mysql({
+        version: rds.MysqlEngineVersion.VER_8_0,
+      }),
+      instanceType: ec2.InstanceType.of(
+          ec2.InstanceClass.T3,
+          ec2.InstanceSize.MICRO
+      ),
+      vpc: this.vpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+      },
+      securityGroups: [databaseSG],
+      multiAz: false,
+      allocatedStorage: 20,
+      maxAllocatedStorage: 100,
+      databaseName: 'qlmcp',
+      credentials: rds.Credentials.fromPassword(
+          databaseUser,
+          SecretValue.unsafePlainText(databasePassword),
+      ),
+      removalPolicy: RemovalPolicy.DESTROY
     })
   }
 
