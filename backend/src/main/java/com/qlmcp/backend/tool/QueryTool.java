@@ -5,13 +5,13 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
+import org.springaicommunity.mcp.annotation.McpTool;
+import org.springaicommunity.mcp.annotation.McpToolParam;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.tool.annotation.Tool;
-import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 @Slf4j
-@Service
+@Component
 public class QueryTool {
 
     private final ChatClient chatClient;
@@ -24,8 +24,8 @@ public class QueryTool {
         this.LOG_TAG_PATTERN = Pattern.compile(promptConfig.getLogTag(), Pattern.DOTALL);
     }
 
-    @Tool(name = "query", description = "Execute query with custom tools")
-    String query(@ToolParam String query) {
+    @McpTool(name = "query", description = "Execute query with custom tools")
+    String query(@McpToolParam String query) {
         String response = chatClient
             .prompt()
             .user(promptConfig.getUserPromptStart() + query + promptConfig.getUserPromptEnd())
