@@ -18,10 +18,26 @@ if (!domainName) {
   throw new Error('DOMAIN_NAME is not defined in environment variables');
 }
 
+const databaseUser = process.env.DATABASE_USER!;
+if (!databaseUser) {
+  throw new Error('databaseUser is not defined in environment variables');
+}
+
+const databasePassword = process.env.DATABASE_PASSWORD!;
+if (!databasePassword) {
+  throw new Error('databasePassword is not defined in environment variables');
+}
+
 const app = new App();
-new InfraStack(app, 'InfraStack', domainName, env, {
-  env: {
-    account: process.env.AWS_ACCOUNT_ID,
-    region: process.env.AWS_REGION,
-  }
-});
+new InfraStack(app,
+    'InfraStack',
+    domainName,
+    databaseUser,
+    databasePassword,
+    env, {
+      env: {
+        account: process.env.AWS_ACCOUNT_ID,
+        region: process.env.AWS_REGION,
+      }
+    }
+);

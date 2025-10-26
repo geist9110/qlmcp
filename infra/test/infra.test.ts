@@ -11,15 +11,23 @@ describe('InfraStack', () => {
   let stack: InfraStack;
   let template: Template;
   const domainName = process.env.DOMAIN_NAME!;
+  const databaseUser = process.env.DATABASE_USER!;
+  const databasePassword = process.env.DATABASE_PASSWORD!;
 
   beforeEach(() => {
     app = new cdk.App();
-    stack = new InfraStack(app, 'TestStack', domainName, env, {
-      env: {
-        account: process.env.AWS_ACCOUNT_ID,
-        region: process.env.AWS_REGION,
-      },
-    });
+    stack = new InfraStack(
+        app,
+        'TestStack',
+        domainName,
+        databaseUser,
+        databasePassword,
+        env, {
+          env: {
+            account: process.env.AWS_ACCOUNT_ID,
+            region: process.env.AWS_REGION,
+          },
+        });
     template = Template.fromStack(stack);
   });
 
@@ -38,8 +46,8 @@ describe('InfraStack', () => {
       template.resourceCountIs('AWS::EC2::NatGateway', 0);
     })
 
-    test("VPC가 하나의 Public Subnet을 가지는지 확인", () => {
-      template.resourceCountIs('AWS::EC2::Subnet', 1);
+    test("VPC가 2*2개의 Subnet을 가지는지 확인", () => {
+      template.resourceCountIs('AWS::EC2::Subnet', 4);
     })
 
     test("Subnet의 CIDR 마스크가 /24인지 확인", () => {
