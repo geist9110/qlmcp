@@ -1,0 +1,19 @@
+spring:
+  ai:
+    mcp:
+      client:
+        enabled: true
+        initialized: true
+        name: client
+        request-timeout: 60s
+        root-change-notification: true
+        type: sync
+        version: 1.0.0
+        sse:
+          connections:
+            korea-weather-mcp:
+              url: ${MCP_SERVER_URL:http://localhost}:8888
+            context7-mcp:
+              url: ${MCP_SERVER_URL:http://localhost}:8889
+            naver-search-mcp:
+              url: ${MCP_SERVER_URL:http://localhost}:8890
