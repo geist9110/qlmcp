@@ -10,8 +10,9 @@ spring:
       ddl-auto: create-drop
 ---
 spring:
-  activate:
-    on-profile: prod
+  config:
+    activate:
+      on-profile: prod
 
   jpa:
     hibernate:

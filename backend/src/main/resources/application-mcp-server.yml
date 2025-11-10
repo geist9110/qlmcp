@@ -4,7 +4,7 @@ spring:
       server:
         name: QLMCP
         version: 1.1.0
-        intructions: AI assistant designed to help users with their queries. Provide clear and concise answers.
+        instructions: AI assistant designed to help users with their queries. Provide clear and concise answers.
         capabilities:
           prompt: false
           tool: true
