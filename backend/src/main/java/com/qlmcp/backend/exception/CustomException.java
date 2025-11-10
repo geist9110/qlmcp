@@ -1,13 +1,14 @@
 package com.qlmcp.backend.exception;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.util.UriComponentsBuilder;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.util.UriComponentsBuilder;
 
 @Getter
 @Builder
@@ -23,24 +24,24 @@ public class CustomException extends RuntimeException {
         HttpHeaders headers = new HttpHeaders();
 
         UriComponentsBuilder builder = UriComponentsBuilder
-            .fromUriString(redirectUri)
-            .queryParam("error_code", errorCode.getCode())
-            .queryParam("error_message", errorCode.getMessage());
+                .fromUriString(redirectUri)
+                .queryParam("error_code", errorCode.getCode())
+                .queryParam("error_message", errorCode.getMessage());
 
         headers.add(HttpHeaders.LOCATION, builder.toUriString());
 
         return CustomException
-            .builder()
-            .httpStatus(HttpStatus.FOUND)
-            .headers(headers)
-            .build();
+                .builder()
+                .httpStatus(HttpStatus.FOUND)
+                .headers(headers)
+                .build();
     }
 
     public static CustomException badRequest(ErrorCode errorCode) {
         return CustomException
-            .builder()
-            .httpStatus(HttpStatus.BAD_REQUEST)
-            .errorCode(errorCode)
-            .build();
+                .builder()
+                .httpStatus(HttpStatus.BAD_REQUEST)
+                .errorCode(errorCode)
+                .build();
     }
 }
