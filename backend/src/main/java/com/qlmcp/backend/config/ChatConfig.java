@@ -1,12 +1,14 @@
 package com.qlmcp.backend.config;
 
+import com.qlmcp.backend.tool.MemoryTool;
+
 import io.modelcontextprotocol.client.McpSyncClient;
-import java.util.ArrayList;
-import java.util.List;
+
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.ai.tool.resolution.DelegatingToolCallbackResolver;
 import org.springframework.ai.tool.resolution.SpringBeanToolCallbackResolver;
 import org.springframework.ai.tool.resolution.StaticToolCallbackResolver;
@@ -16,6 +18,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.support.GenericApplicationContext;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Configuration
 public class ChatConfig {
@@ -29,48 +34,49 @@ public class ChatConfig {
     @Bean
     @Primary
     public ToolCallbackResolver externalToolCallbackResolver(
-        GenericApplicationContext applicationContext,
-        List<ToolCallback> toolCallbacks,
-        ObjectProvider<List<McpSyncClient>> syncMcpClients
-    ) {
-        List<ToolCallbackProvider> tcbProviders = List
-            .of(getSyncMcpToolCallbackProvider(syncMcpClients));
+            GenericApplicationContext applicationContext,
+            List<ToolCallback> toolCallbacks,
+            ObjectProvider<List<McpSyncClient>> syncMcpClients) {
+        List<ToolCallbackProvider> tcbProviders =
+                List.of(getSyncMcpToolCallbackProvider(syncMcpClients));
 
         List<ToolCallback> allFunctionAndToolCallbacks = new ArrayList<>(toolCallbacks);
         tcbProviders.stream()
-            .map(pr -> List.of(pr.getToolCallbacks()))
-            .forEach(allFunctionAndToolCallbacks::addAll);
+                .map(pr -> List.of(pr.getToolCallbacks()))
+                .forEach(allFunctionAndToolCallbacks::addAll);
 
-        var staticToolCallbackResolver = new StaticToolCallbackResolver(
-            allFunctionAndToolCallbacks);
+        var staticToolCallbackResolver =
+                new StaticToolCallbackResolver(allFunctionAndToolCallbacks);
 
-        var springBeanToolCallbackResolver = SpringBeanToolCallbackResolver.builder()
-            .applicationContext(applicationContext)
-            .build();
+        var springBeanToolCallbackResolver =
+                SpringBeanToolCallbackResolver.builder()
+                        .applicationContext(applicationContext)
+                        .build();
 
         return new DelegatingToolCallbackResolver(
-            List.of(staticToolCallbackResolver, springBeanToolCallbackResolver));
+                List.of(staticToolCallbackResolver, springBeanToolCallbackResolver));
     }
 
     @Bean
     public ChatClient chatClient(
-        ChatClient.Builder chatClientBuilder,
-        ObjectProvider<List<McpSyncClient>> syncMcpClients,
-        PromptConfig promptConfig
-    ) {
+            ChatClient.Builder chatClientBuilder,
+            ObjectProvider<List<McpSyncClient>> syncMcpClients,
+            PromptConfig promptConfig,
+            MemoryTool memoryTool) {
+        ToolCallbackProvider memoryToolCallbackProvider =
+                MethodToolCallbackProvider.builder().toolObjects(memoryTool).build();
+
         return chatClientBuilder
-            .defaultSystem(promptConfig.getSystemPrompt())
-            .defaultToolCallbacks(getSyncMcpToolCallbackProvider(syncMcpClients))
-            .build();
+                .defaultSystem(promptConfig.getSystemPrompt())
+                .defaultToolCallbacks(
+                        getSyncMcpToolCallbackProvider(syncMcpClients), memoryToolCallbackProvider)
+                .build();
     }
 
     // Bean으로 등록시 외부에 Tool이 노출되므로 등록하면 안된다.
     private SyncMcpToolCallbackProvider getSyncMcpToolCallbackProvider(
-        ObjectProvider<List<McpSyncClient>> syncMcpClients
-    ) {
+            ObjectProvider<List<McpSyncClient>> syncMcpClients) {
         List<McpSyncClient> mcpClients = syncMcpClients.stream().flatMap(List::stream).toList();
-        return SyncMcpToolCallbackProvider.builder()
-            .mcpClients(mcpClients)
-            .build();
+        return SyncMcpToolCallbackProvider.builder().mcpClients(mcpClients).build();
     }
 }

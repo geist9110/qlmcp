@@ -2,94 +2,53 @@ spring:
   application:
     name: backend
 
+  config:
+    import:
+      - classpath:application-ai.yml
+      - classpath:application-mcp-client.yml
+      - classpath:application-mcp-server.yml
+      - classpath:application-database.yml
+      - classpath:application-security.yml
+      - classpath:application-config.yml
+
+  profiles:
+    active: dev
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+---
+spring:
+  config:
+    activate:
+      on-profile: test
   ai:
-    mcp:
-      server:
-        name: ${SERVER_NAME}
-        version: ${SERVER_VERSION}
-        instructions: ${SERVER_INSTRUCTIONS}
-        capabilities:
-          prompt: false
-          tool: true
-          resource: false
-          completion: false
-        prompt-change-notification: true
-        resource-change-notification: false
-        tool-change-notification: true
-        request-timeout: ${SERVER_REQUEST_TIMEOUT}
-        type: ${SERVER_TYPE}
-        protocol: ${SERVER_PROTOCOL}
-
-      client:
-        enabled: true
-        initialized: true
-        name: ${CLIENT_NAME}
-        request-timeout: ${CLIENT_REQUEST_TIMEOUT}
-        root-change-notification: true
-        type: sync
-        version: ${CLIENT_VERSION}
-        sse:
-          connections:
-            korea-weather-mcp:
-              url: ${KOREA_WEATHER_MCP_URL}
-            context7-mcp:
-              url: ${CONTEXT7_MCP_URL}
-            naver-search-mcp:
-              url: ${NAVER_SEARCH_MCP_URL}
-
     openai:
-      api-key: ${AI_API_KEY}
-      base-url: ${AI_API_BASE_URL}
+      api-key: test-API-key
+      base-url: http://test-api-url
       chat:
         options:
-          model: ${AI_API_MODEL}
-          reasoning-effort: ${AI_REASONING_EFFORT}
           prompt:
-            system-prompt: ${AI_SYSTEM_PROMPT}
-            user-prompt-start: ${AI_USER_PROMPT_START}
-            user-prompt-end: ${AI_USER_PROMPT_END}
-            log-tag: ${AI_LOG_TAG}
-
+            system-prompt: test-system-prompt
+            user-prompt-start: test-user-prompt-start
+            user-prompt-end: test-user-prompt-end
+            log-tag: <log>(.*?)</log>
   security:
     oauth2:
       client:
         registration:
           github:
-            client-id: ${GITHUB_CLIENT_ID}
-            client-secret: ${GITHUB_CLIENT_SECRET}
-            redirect-uri: ${CONFIG_AUTH_SERVER}/oauth2/callback/github
+            client-id: test-github-clinet-id
+            client-secret: test-github-clinet-secret
           google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
-            redirect-uri: ${CONFIG_AUTH_SERVER}/oauth2/callback/google
-            scope:
-              - email
-              - profile
-
-  datasource:
-    driver-class-name: ${DB_DRIVER_CLASS_NAME}
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-
-  jpa:
-    hibernate:
-      ddl-auto: ${JPA_HIBERNATE_DDL_AUTO}
-
-server:
-  port: ${SERVER_PORT}
-  ssl:
-    enabled: ${SSL_ENABLED}
-    key-store: ${SSL_KEY_STORE}
-    key-store-password: ${SSL_KEY_STORE_PASSWORD}
-    key-store-type: ${SSL_TYPE}
-    key-alias: ${SSL_KEY_ALIAS}
+            client-id: test-google-client-id
+            client-secret: test-google-client-secret
 
 jwt:
-  secret: ${JWT_SECRET}
-  access-token-validity: ${JWT_ACCESS_TOKEN_VALIDITY}
-  refresh-token-validity: ${JWT_REFRESH_TOKEN_VALIDITY}
-
-config:
-  resource-server-url: ${CONFIG_RESOURCE_SERVER}
-  auth-server-url: ${CONFIG_AUTH_SERVER}
+  secret: this-is-jwt-secret-this-is-jwt-secret-this-is-jwt-secret

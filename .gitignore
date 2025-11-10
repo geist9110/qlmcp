@@ -5,6 +5,9 @@
 # MCP 서버 관련 도커 파일
 mcp
 
+# vscode 세팅
+.vscode
+
 # ignore all idea file
 .idea
 

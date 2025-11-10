@@ -1,0 +1,14 @@
+spring:
+  ai:
+    openai:
+      api-key: ${AI_API_KEY}
+      base-url: https://generativelanguage.googleapis.com/v1beta/openai
+      chat:
+        options:
+          model: gemini-2.5-flash
+          reasoning-effort: none
+          prompt:
+            system-prompt: ${AI_SYSTEM_PROMPT}
+            user-prompt-start: ${AI_USER_PROMPT_START}
+            user-prompt-end: ${AI_USER_PROMPT_END}
+            log-tag: ${AI_LOG_TAG}
