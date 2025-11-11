@@ -27,9 +27,12 @@ public class MemoryService {
         memoryRepository.save(memory);
     }
 
-    public List<Memory> readMemory(MemoryCategory category) {
+    public List<String> readMemory(MemoryCategory category) {
         return memoryRepository
-                .findAllByAccountAndMemoryCategory(accountService.getAccountFromContext(), category);
+                .findAllByAccountAndMemoryCategory(accountService.getAccountFromContext(), category)
+                .stream()
+                .map(memory -> memory.getContent())
+                .toList();
     }
 
 }
