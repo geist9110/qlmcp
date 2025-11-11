@@ -1,18 +1,21 @@
 package com.qlmcp.backend;
 
 import static com.qlmcp.backend.util.ReflectionHelper.getFieldValue;
-
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import io.modelcontextprotocol.client.McpSyncClient;
-import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
+import java.util.List;
+import java.util.Map;
+
+import com.qlmcp.backend.tool.MemoryTool;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
+import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,24 +24,33 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.List;
-import java.util.Map;
+import io.modelcontextprotocol.client.McpSyncClient;
+import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
 
 @ActiveProfiles("test")
 @SpringBootTest
 class BackendApplicationTests {
 
-    @Autowired private ObjectProvider<List<SyncToolSpecification>> tools;
+    @Autowired
+    private ObjectProvider<List<SyncToolSpecification>> tools;
 
-    @Autowired ObjectProvider<List<McpSyncClient>> syncMcpClients;
+    @Autowired
+    ObjectProvider<List<McpSyncClient>> syncMcpClients;
 
-    @Autowired private ToolCallbackResolver toolCallbackResolver;
+    @Autowired
+    private ToolCallbackResolver toolCallbackResolver;
 
-    @Autowired private ChatClient chatClient;
+    @Autowired
+    private ChatClient chatClient;
 
-    @Autowired private ApplicationContext applicationContext;
+    @Autowired
+    private ApplicationContext applicationContext;
 
-    @Autowired private Environment environment;
+    @Autowired
+    private Environment environment;
+
+    @Autowired
+    private MemoryTool memoryTool;
 
     @Test
     @DisplayName("Spring Application Context가 정상적으로 로드되는지 테스트")
@@ -57,17 +69,14 @@ class BackendApplicationTests {
     @Test
     @DisplayName("ToolCallbackResolver가 외부 툴만 불러오는지 테스트")
     void externalToolTest() {
-        List<?> actualResolver =
-                getFieldValue(toolCallbackResolver, "toolCallbackResolvers", List.class);
-        Map<?, ?> actualToolCallbackMap =
-                getFieldValue(actualResolver.getFirst(), "toolCallbacks", Map.class);
+        List<?> actualResolver = getFieldValue(toolCallbackResolver, "toolCallbackResolvers", List.class);
+        Map<?, ?> actualToolCallbackMap = getFieldValue(actualResolver.getFirst(), "toolCallbacks", Map.class);
 
         assertAll(
                 () -> assertNotNull(toolCallbackResolver),
-                () ->
-                        assertEquals(
-                                getSyncToolCallbackProvider().getToolCallbacks().length,
-                                actualToolCallbackMap.size()));
+                () -> assertEquals(
+                        getSyncToolCallbackProvider().getToolCallbacks().length,
+                        actualToolCallbackMap.size()));
     }
 
     private SyncMcpToolCallbackProvider getSyncToolCallbackProvider() {
@@ -78,23 +87,24 @@ class BackendApplicationTests {
     @Test
     @DisplayName("ChatClient가 외부 툴을 기본으로 가지는지 테스트")
     void chatClientTest() {
-        Object defaultChatClientRequest =
-                getFieldValue(chatClient, "defaultChatClientRequest", Object.class);
+        Object defaultChatClientRequest = getFieldValue(chatClient, "defaultChatClientRequest", Object.class);
 
-        List<?> actualToolCallbacks =
-                getFieldValue(defaultChatClientRequest, "toolCallbacks", List.class);
+        List<?> actualToolCallbacks = getFieldValue(defaultChatClientRequest, "toolCallbacks", List.class);
 
-        // 현재 PoC를 위한 Memory 툴이 추가되어 있기에 +1을 진행
+        ToolCallbackProvider memoryToolCallbackProvider = MethodToolCallbackProvider.builder().toolObjects(memoryTool)
+                .build();
+
         assertEquals(
-                getSyncToolCallbackProvider().getToolCallbacks().length + 1,
+                getSyncToolCallbackProvider().getToolCallbacks().length
+                        + memoryToolCallbackProvider.getToolCallbacks().length,
                 actualToolCallbacks.size());
     }
 
     @Test
     @DisplayName("Application Context가 SyncMcpToolCallbackProvider을 반환값으로 가지는 빈을 가지지 않는지 확인하는 테스트")
     void noSyncMcpToolCallbackProviderBeanTest() {
-        Map<String, SyncMcpToolCallbackProvider> beans =
-                applicationContext.getBeansOfType(SyncMcpToolCallbackProvider.class);
+        Map<String, SyncMcpToolCallbackProvider> beans = applicationContext
+                .getBeansOfType(SyncMcpToolCallbackProvider.class);
 
         assertEquals(0, beans.size());
     }
