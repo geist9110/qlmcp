@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MemoryTool {
 
-    private MemoryService memoryService;
+    private final MemoryService memoryService;
 
     @Tool(name = "read_project_memory", description = "read project memory")
     public List<String> readProjectMemory() {

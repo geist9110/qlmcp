@@ -31,7 +31,7 @@ public class MemoryService {
         return memoryRepository
                 .findAllByAccountAndMemoryCategory(accountService.getAccountFromContext(), category)
                 .stream()
-                .map(memory -> memory.getContent())
+                .map(Memory::getContent)
                 .toList();
     }
 

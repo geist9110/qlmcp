@@ -63,7 +63,7 @@ public class MemoryToolTest {
         when(memoryService.readMemory(MemoryCategory.Resource))
                 .thenReturn(expected);
 
-        // given
+        // then
         assertEquals(expected, memoryTool.readResourceMemory());
         verify(memoryService).readMemory(MemoryCategory.Resource);
     }
