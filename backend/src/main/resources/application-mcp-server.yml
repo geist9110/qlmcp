@@ -16,3 +16,4 @@ spring:
         request-timeout: 180s
         type: sync
         protocol: streamable
+        tool-callback-converter: false
