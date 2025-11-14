@@ -27,7 +27,7 @@ repositories {
 
 ext {
     set('snippetsDir', file('build/generated-snippets'))
-    springAiVersion = '1.1.0-M3'
+    springAiVersion = '1.1.0'
 }
 
 dependencies {
