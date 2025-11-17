@@ -37,8 +37,7 @@ public class OAuth2Service {
     public List<OAuthProviderResponseDto> getProviders() {
         return List.of(
             new OAuthProviderResponseDto("google", "/oauth2/login/google"),
-            new OAuthProviderResponseDto("github", "/oauth2/login/github")
-        );
+            new OAuthProviderResponseDto("github", "/oauth2/login/github"));
     }
 
     public String getAuthorizeCode(AuthorizeDto authorizeDto) {
@@ -62,16 +61,14 @@ public class OAuth2Service {
             || authorizeDto.getCodeChallengeMethod() == null) {
             throw CustomException.redirect(
                 ErrorCode.PKCE_REQUIRED,
-                builder.build().toUriString()
-            );
+                builder.build().toUriString());
         }
 
         if (!authorizeDto.getCodeChallengeMethod().equals("S256")
             && !authorizeDto.getCodeChallengeMethod().equals("plain")) {
             throw CustomException.redirect(
                 ErrorCode.PKCE_REQUIRED,
-                builder.build().toUriString()
-            );
+                builder.build().toUriString());
         }
 
         AuthorizationCode authCode = new AuthorizationCode(
@@ -81,8 +78,7 @@ public class OAuth2Service {
             authorizeDto.getCodeChallenge(),
             authorizeDto.getCodeChallengeMethod(),
             authorizeDto.getScope(),
-            authorizeDto.getState()
-        );
+            authorizeDto.getState());
         authorizationCodeRepository.save(authCode);
         return authCode.getCode();
     }
@@ -107,8 +103,7 @@ public class OAuth2Service {
     private ClientCredential getClientCredential(
         String authHeader,
         String clientId,
-        String clientSecret
-    ) {
+        String clientSecret) {
         if (authHeader != null && authHeader.startsWith("Basic ")) {
             String base64Credentials = authHeader.replace("Basic ", "");
             String credentials = new String(Base64.getDecoder().decode(base64Credentials));
@@ -154,8 +149,7 @@ public class OAuth2Service {
         String code,
         String codeVerifier,
         String redirectUri,
-        Client client
-    ) {
+        Client client) {
         AuthorizationCode authCode = authorizationCodeRepository
             .findByCode(code)
             .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_CODE));
@@ -165,8 +159,7 @@ public class OAuth2Service {
             || !authCode.getRedirectUri().equals(redirectUri)
             || codeVerifier == null
             || !pkceVerifier.verify(authCode.getCodeChallenge(), authCode.getCodeChallengeMethod(),
-            codeVerifier)
-        ) {
+            codeVerifier)) {
             authorizationCodeRepository.delete(authCode);
             throw CustomException.badRequest(ErrorCode.INVALID_CODE);
         }
@@ -178,15 +171,13 @@ public class OAuth2Service {
             .generateAccessToken(
                 authCode.getUsername(),
                 client.getClientId(),
-                authCode.getScope()
-            );
+                authCode.getScope());
 
         RefreshToken refreshToken = new RefreshToken(
             authCode.getUsername(),
             client.getClientId(),
             authCode.getScope(),
-            refreshTokenValidity
-        );
+            refreshTokenValidity);
         refreshTokenRepository.save(refreshToken);
 
         return TokenDto.builder()
@@ -214,8 +205,7 @@ public class OAuth2Service {
         String accessToken = jwtTokenProvider.generateAccessToken(
             refreshToken.getUsername(),
             client.getClientId(),
-            refreshToken.getScope()
-        );
+            refreshToken.getScope());
 
         return TokenDto.builder()
             .accessToken(accessToken)
