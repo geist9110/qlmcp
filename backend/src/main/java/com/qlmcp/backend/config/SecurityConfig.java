@@ -1,7 +1,6 @@
 package com.qlmcp.backend.config;
 
-import java.io.IOException;
-
+import com.qlmcp.backend.config.McpConfig.MCPAuthenticationEntryPoint;
 import com.qlmcp.backend.service.CustomOAuth2UserService;
 import com.qlmcp.backend.util.JwtTokenProvider;
 
@@ -9,13 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +20,7 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final MCPAuthenticationEntryPoint mcpAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -55,7 +50,7 @@ public class SecurityConfig {
                 .oauth2ResourceServer(
                         oauth2 -> oauth2.jwt(
                                 jwt -> jwt.decoder(jwtTokenProvider.getJwtDecoder()))
-                                .authenticationEntryPoint(new MCPAuthenticationEntryPoint()))
+                                .authenticationEntryPoint(mcpAuthenticationEntryPoint))
                 .oauth2Login(
                         oauth -> oauth
                                 .loginPage("/login")
@@ -68,24 +63,5 @@ public class SecurityConfig {
                                         .userService(customOAuth2UserService)));
 
         return http.build();
-    }
-
-    private static class MCPAuthenticationEntryPoint implements AuthenticationEntryPoint {
-
-        @Override
-        public void commence(
-                HttpServletRequest request,
-                HttpServletResponse response,
-                AuthenticationException authException) throws IOException, ServletException {
-            String baseUrl = request.getScheme() + "://"
-                    + request.getServerName() + ":"
-                    + request.getServerPort();
-
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setHeader("WWW-Authenticate",
-                    String.format(
-                            "Bearer authorization_server=\"%s\", ",
-                            baseUrl));
-        }
     }
 }
