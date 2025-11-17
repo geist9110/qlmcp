@@ -1,16 +1,17 @@
 package com.qlmcp.backend.controller;
 
+import com.qlmcp.backend.dto.AuthProvider;
 import com.qlmcp.backend.dto.AuthorizeDto;
 import com.qlmcp.backend.dto.OAuthProviderResponseDto;
 import com.qlmcp.backend.dto.TokenDto;
 import com.qlmcp.backend.service.OAuth2Service;
-import java.security.Principal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -41,13 +42,7 @@ public class OAuth2Controller {
         @RequestParam("response_type") String responseType,
         @RequestParam(required = false) String scope,
         @RequestParam(required = false) String state,
-        Principal principal
-    ) {
-        log.info("=== Authorization Request START ===");
-        log.info("Client ID: {}", clientId);
-        log.info("Redirect URI: {}", redirectUri);
-        log.info("Authenticated Principal: {}", principal.getName());
-
+        OAuth2AuthenticationToken principal) {
         String authCode = oAuth2Service.getAuthorizeCode(
             AuthorizeDto.builder()
                 .responseType(responseType)
@@ -57,23 +52,17 @@ public class OAuth2Controller {
                 .codeChallenge(codeChallenge)
                 .codeChallengeMethod(codeChallengeMethod)
                 .clientId(clientId)
+                .authProvider(
+                    AuthProvider.valueOf(
+                        principal.getAuthorizedClientRegistrationId().toUpperCase()))
                 .userName(principal.getName())
-                .build()
-        );
-
-        log.info(
-            "Authorization Code Issued - code: {}, user: {}",
-            authCode,
-            principal.getName()
-        );
-        log.info("=== Authorization Request END ===");
+                .build());
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.LOCATION, buildRedirectUri(
             redirectUri,
             authCode,
-            state
-        ));
+            state));
 
         return ResponseEntity
             .status(HttpStatus.FOUND)
@@ -101,8 +90,7 @@ public class OAuth2Controller {
         @RequestParam(value = "client_id", required = false) String clientId,
         @RequestParam(value = "client_secret", required = false) String clientSecret,
         @RequestParam(value = "refresh_token", required = false) String refreshTokenValue,
-        @RequestHeader(value = "Authorization", required = false) String authHeader
-    ) {
+        @RequestHeader(value = "Authorization", required = false) String authHeader) {
         return ResponseEntity.ok(
             oAuth2Service.getToken(
                 grantType,
@@ -112,8 +100,6 @@ public class OAuth2Controller {
                 clientId,
                 clientSecret,
                 refreshTokenValue,
-                authHeader
-            )
-        );
+                authHeader));
     }
 }

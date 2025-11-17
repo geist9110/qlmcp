@@ -1,5 +1,6 @@
 package com.qlmcp.backend.entity;
 
+import com.qlmcp.backend.dto.AuthProvider;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -29,6 +30,9 @@ public class AuthorizationCode {
     private String clientId;
 
     @Column(nullable = false)
+    private AuthProvider authProvider;
+
+    @Column(nullable = false)
     private String redirectUri;
 
     @Column(nullable = false)
@@ -49,15 +53,16 @@ public class AuthorizationCode {
     public AuthorizationCode(
         String username,
         String clientId,
+        AuthProvider authProvider,
         String redirectUri,
         String codeChallenge,
         String codeChallengeMethod,
         String scope,
-        String state
-    ) {
+        String state) {
         this.code = UUID.randomUUID().toString();
         this.username = username;
         this.clientId = clientId;
+        this.authProvider = authProvider;
         this.redirectUri = redirectUri;
         this.codeChallenge = codeChallenge;
         this.codeChallengeMethod = codeChallengeMethod;
