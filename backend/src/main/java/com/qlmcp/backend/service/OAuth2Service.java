@@ -102,38 +102,40 @@ public class OAuth2Service {
     }
 
     public TokenDto.Response getToken(TokenDto.Command command) {
-        ClientCredential clientCredential = getClientCredential(command.getAuthHeader(), command.getClientId(),
-                command.getClientSecret());
-
+        validateAuthHeader(command.getAuthHeader());
+        ClientCredential clientCredential = parseClientCredential(command.getAuthHeader());
         Client client = authenticateClient(clientCredential);
 
         return switch (command.getGrantType()) {
             case GrantType.AUTHORIZATION_CODE ->
-                handleAuthorizationCodeGrant(command.getCode(), command.getCodeVerifier(), command.getRedirectUri(),
+                handleAuthorizationCodeGrant(
+                        command.getCode(),
+                        command.getCodeVerifier(),
+                        command.getRedirectUri(),
                         client);
-            case GrantType.REFRESH_TOKEN -> handleRefreshTokenGrant(command.getRefreshTokenValue(), client);
-            default -> throw CustomException.badRequest(ErrorCode.INVALID_GRANT_TYPE);
+            case GrantType.REFRESH_TOKEN ->
+                handleRefreshTokenGrant(
+                        command.getRefreshTokenValue(),
+                        client);
+            default -> throw CustomException.badRequest(
+                    ErrorCode.INVALID_GRANT_TYPE);
         };
     }
 
-    private ClientCredential getClientCredential(
-            String authHeader,
-            String clientId,
-            String clientSecret) {
-        if (authHeader != null && authHeader.startsWith("Basic ")) {
-            String base64Credentials = authHeader.replace("Basic ", "");
-            String credentials = new String(Base64.getDecoder().decode(base64Credentials));
-            String[] parts = credentials.split(":");
-
-            return ClientCredential.builder()
-                    .clientId(parts[0])
-                    .clientSecret(parts.length > 1 ? parts[1] : null)
-                    .build();
+    private void validateAuthHeader(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Basic ")) {
+            throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
         }
+    }
+
+    private ClientCredential parseClientCredential(String authHeader) {
+        String base64Credentials = authHeader.replace("Basic ", "");
+        String credentials = new String(Base64.getDecoder().decode(base64Credentials));
+        String[] parts = credentials.split(":");
 
         return ClientCredential.builder()
-                .clientId(clientId)
-                .clientSecret(clientSecret)
+                .clientId(parts[0])
+                .clientSecret(parts.length > 1 ? parts[1] : null)
                 .build();
     }
 
