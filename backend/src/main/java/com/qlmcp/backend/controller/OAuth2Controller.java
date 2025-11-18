@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -37,7 +36,7 @@ public class OAuth2Controller {
     }
 
     @GetMapping("/authorize")
-    public ResponseEntity<?> authorize(
+    public ResponseEntity<Void> authorize(
             @ModelAttribute AuthorizeDto.Request request,
             OAuth2AuthenticationToken principal) {
         AuthorizeDto.Response response = oAuth2Service.getAuthorizeCode(
@@ -67,24 +66,10 @@ public class OAuth2Controller {
     }
 
     @PostMapping("/token")
-    public ResponseEntity<TokenDto> getToken(
-            @RequestParam("grant_type") String grantType,
-            @RequestParam(value = "code", required = false) String code,
-            @RequestParam(value = "code_verifier", required = false) String codeVerifier,
-            @RequestParam(value = "redirect_uri", required = false) String redirectUri,
-            @RequestParam(value = "client_id", required = false) String clientId,
-            @RequestParam(value = "client_secret", required = false) String clientSecret,
-            @RequestParam(value = "refresh_token", required = false) String refreshTokenValue,
+    public ResponseEntity<TokenDto.Response> getToken(
+            @ModelAttribute TokenDto.Request request,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         return ResponseEntity.ok(
-                oAuth2Service.getToken(
-                        grantType,
-                        code,
-                        codeVerifier,
-                        redirectUri,
-                        clientId,
-                        clientSecret,
-                        refreshTokenValue,
-                        authHeader));
+                oAuth2Service.getToken(TokenDto.toCommand(request, authHeader)));
     }
 }

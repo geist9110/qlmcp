@@ -90,18 +90,19 @@ public class OAuth2Service {
                 .build();
     }
 
-    public TokenDto getToken(String grantType, String code, String codeVerifier, String redirectUri,
-            String clientId, String clientSecret, String refreshTokenValue, String authHeader) {
-        ClientCredential clientCredential = getClientCredential(authHeader, clientId, clientSecret);
+    public TokenDto.Response getToken(TokenDto.Command command) {
+        ClientCredential clientCredential = getClientCredential(command.getAuthHeader(), command.getClientId(),
+                command.getClientSecret());
 
         Client client = authenticateClient(clientCredential);
 
-        if (grantType.equals("authorization_code")) {
-            return handleAuthorizationCodeGrant(code, codeVerifier, redirectUri, client);
+        if (command.getGrantType().equals("authorization_code")) {
+            return handleAuthorizationCodeGrant(command.getCode(), command.getCodeVerifier(), command.getRedirectUri(),
+                    client);
         }
 
-        if (grantType.equals("refresh_token")) {
-            return handleRefreshTokenGrant(refreshTokenValue, client);
+        if (command.getGrantType().equals("refresh_token")) {
+            return handleRefreshTokenGrant(command.getRefreshTokenValue(), client);
         }
 
         throw CustomException.badRequest(ErrorCode.INVALID_GRANT_TYPE);
@@ -152,7 +153,7 @@ public class OAuth2Service {
         return client;
     }
 
-    private TokenDto handleAuthorizationCodeGrant(
+    private TokenDto.Response handleAuthorizationCodeGrant(
             String code,
             String codeVerifier,
             String redirectUri,
@@ -189,7 +190,7 @@ public class OAuth2Service {
                 authCode.getAuthProvider());
         refreshTokenRepository.save(refreshToken);
 
-        return TokenDto.builder()
+        return TokenDto.Response.builder()
                 .accessToken(accessToken)
                 .tokenType("Bearer")
                 .expiresIn(jwtTokenProvider.getAccessTokenValidity())
@@ -198,7 +199,7 @@ public class OAuth2Service {
                 .build();
     }
 
-    private TokenDto handleRefreshTokenGrant(String refreshTokenValue, Client client) {
+    private TokenDto.Response handleRefreshTokenGrant(String refreshTokenValue, Client client) {
         RefreshToken refreshToken = refreshTokenRepository
                 .findByToken(refreshTokenValue)
                 .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_TOKEN));
@@ -217,7 +218,7 @@ public class OAuth2Service {
                 refreshToken.getScope(),
                 refreshToken.getAuthProvider());
 
-        return TokenDto.builder()
+        return TokenDto.Response.builder()
                 .accessToken(accessToken)
                 .tokenType("Bearer")
                 .expiresIn(jwtTokenProvider.getAccessTokenValidity())
