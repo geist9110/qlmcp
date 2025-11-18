@@ -44,27 +44,14 @@ public class OAuth2Service {
     }
 
     public AuthorizeDto.Response getAuthorizeCode(AuthorizeDto.Command command) {
-        if (command.getResponseType() != ResponseType.CODE) {
-            throw CustomException.badRequest(ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
-        }
+        validateResponseType(command.getResponseType());
 
         Client client = clientRepository
                 .findByClientId(command.getClientId())
                 .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_CLIENT));
 
-        if (!client.getRedirectUris().contains(command.getRedirectUri())) {
-            throw CustomException.badRequest(ErrorCode.INVALID_REDIRECT_URI);
-        }
-
-        UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(command.getRedirectUri())
-                .queryParam("state", command.getState());
-
-        if (command.getCodeChallengeMethod() != CodeChallengeMethod.S256) {
-            throw CustomException.redirect(
-                    ErrorCode.PKCE_REQUIRED,
-                    builder.build().toUriString());
-        }
+        validateRedirectUris(client, command.getRedirectUri());
+        validateCodeChallengeMethod(command.getCodeChallengeMethod(), command.getRedirectUri(), command.getState());
 
         AuthorizationCode authCode = new AuthorizationCode(
                 command.getUserName(),
@@ -82,6 +69,31 @@ public class OAuth2Service {
                 .redirectUri(authCode.getRedirectUri())
                 .state(authCode.getState())
                 .build();
+    }
+
+    private void validateResponseType(ResponseType responseType) {
+        if (responseType != ResponseType.CODE) {
+            throw CustomException.badRequest(ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
+        }
+    }
+
+    private void validateRedirectUris(Client client, String redirectUri) {
+        if (!client.getRedirectUris().contains(redirectUri)) {
+            throw CustomException.badRequest(ErrorCode.INVALID_REDIRECT_URI);
+        }
+    }
+
+    private void validateCodeChallengeMethod(CodeChallengeMethod codeChallengeMethod, String redirectUri,
+            String state) {
+        if (codeChallengeMethod != CodeChallengeMethod.S256) {
+            UriComponentsBuilder builder = UriComponentsBuilder
+                    .fromUriString(redirectUri)
+                    .queryParam("state", state);
+
+            throw CustomException.redirect(
+                    ErrorCode.PKCE_REQUIRED,
+                    builder.build().toUriString());
+        }
     }
 
     public TokenDto.Response getToken(TokenDto.Command command) {
