@@ -53,15 +53,7 @@ public class OAuth2Service {
         validateRedirectUris(client, command.getRedirectUri());
         validateCodeChallengeMethod(command.getCodeChallengeMethod(), command.getRedirectUri(), command.getState());
 
-        AuthorizationCode authCode = new AuthorizationCode(
-                command.getUserName(),
-                command.getClientId(),
-                command.getAuthProvider(),
-                command.getRedirectUri(),
-                command.getCodeChallenge(),
-                command.getCodeChallengeMethod().toString(),
-                command.getScope(),
-                command.getState());
+        AuthorizationCode authCode = createAuthorizationCode(command);
         authorizationCodeRepository.save(authCode);
 
         return AuthorizeDto.Response.builder()
@@ -94,6 +86,18 @@ public class OAuth2Service {
                     ErrorCode.PKCE_REQUIRED,
                     builder.build().toUriString());
         }
+    }
+
+    private AuthorizationCode createAuthorizationCode(AuthorizeDto.Command command) {
+        return new AuthorizationCode(
+                command.getUserName(),
+                command.getClientId(),
+                command.getAuthProvider(),
+                command.getRedirectUri(),
+                command.getCodeChallenge(),
+                command.getCodeChallengeMethod().toString(),
+                command.getScope(),
+                command.getState());
     }
 
     public TokenDto.Response getToken(TokenDto.Command command) {
