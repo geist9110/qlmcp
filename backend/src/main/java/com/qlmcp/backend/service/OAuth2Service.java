@@ -4,6 +4,8 @@ import java.util.Base64;
 import java.util.List;
 
 import com.qlmcp.backend.dto.AuthorizeDto;
+import com.qlmcp.backend.dto.AuthorizeDto.CodeChallengeMethod;
+import com.qlmcp.backend.dto.AuthorizeDto.ResponseType;
 import com.qlmcp.backend.dto.ClientCredential;
 import com.qlmcp.backend.dto.OAuthProviderResponseDto;
 import com.qlmcp.backend.dto.TokenDto;
@@ -42,7 +44,7 @@ public class OAuth2Service {
     }
 
     public AuthorizeDto.Response getAuthorizeCode(AuthorizeDto.Command command) {
-        if (!command.getResponseType().equals("code")) {
+        if (command.getResponseType() != ResponseType.CODE) {
             throw CustomException.badRequest(ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
         }
 
@@ -58,15 +60,7 @@ public class OAuth2Service {
                 .fromUriString(command.getRedirectUri())
                 .queryParam("state", command.getState());
 
-        if (command.getCodeChallenge() == null
-                || command.getCodeChallengeMethod() == null) {
-            throw CustomException.redirect(
-                    ErrorCode.PKCE_REQUIRED,
-                    builder.build().toUriString());
-        }
-
-        if (!command.getCodeChallengeMethod().equals("S256")
-                && !command.getCodeChallengeMethod().equals("plain")) {
+        if (command.getCodeChallengeMethod() != CodeChallengeMethod.S256) {
             throw CustomException.redirect(
                     ErrorCode.PKCE_REQUIRED,
                     builder.build().toUriString());
@@ -78,7 +72,7 @@ public class OAuth2Service {
                 command.getAuthProvider(),
                 command.getRedirectUri(),
                 command.getCodeChallenge(),
-                command.getCodeChallengeMethod(),
+                command.getCodeChallengeMethod().toString(),
                 command.getScope(),
                 command.getState());
         authorizationCodeRepository.save(authCode);

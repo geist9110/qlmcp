@@ -26,15 +26,15 @@ public final class AuthorizeDto {
     @Getter
     @Builder
     public static class Command {
-        private String responseType;
-        private String clientId;
-        private AuthProvider authProvider;
-        private String redirectUri;
-        private String codeChallenge;
-        private String codeChallengeMethod;
-        private String state;
-        private String scope;
-        private String userName;
+        private final ResponseType responseType;
+        private final String clientId;
+        private final AuthProvider authProvider;
+        private final String redirectUri;
+        private final String codeChallenge;
+        private final CodeChallengeMethod codeChallengeMethod;
+        private final String state;
+        private final String scope;
+        private final String userName;
 
     }
 
@@ -50,13 +50,35 @@ public final class AuthorizeDto {
         return Command.builder()
                 .clientId(request.client_id)
                 .redirectUri(request.redirect_uri)
-                .responseType(request.response_type)
+                .responseType(ResponseType.from(request.response_type))
                 .scope(request.scope)
                 .state(request.state)
                 .codeChallenge(request.code_challenge)
-                .codeChallengeMethod(request.code_challenge_method)
+                .codeChallengeMethod(CodeChallengeMethod.from(request.code_challenge_method))
                 .authProvider(AuthProvider.valueOf(principal.getAuthorizedClientRegistrationId().toUpperCase()))
                 .userName(principal.getName())
                 .build();
+    }
+
+    public static enum ResponseType {
+        CODE;
+
+        public static ResponseType from(String raw) {
+            return switch (raw) {
+                case "code" -> CODE;
+                default -> null;
+            };
+        }
+    }
+
+    public enum CodeChallengeMethod {
+        S256;
+
+        public static CodeChallengeMethod from(String raw) {
+            return switch (raw) {
+                case "S256" -> S256;
+                default -> null;
+            };
+        }
     }
 }
