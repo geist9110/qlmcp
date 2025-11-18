@@ -104,6 +104,7 @@ public class OAuth2Service {
     public TokenDto.Response getToken(TokenDto.Command command) {
         validateAuthHeader(command.getAuthHeader());
         ClientCredential clientCredential = parseClientCredential(command.getAuthHeader());
+        validateClientCredential(clientCredential);
         Client client = authenticateClient(clientCredential);
 
         return switch (command.getGrantType()) {
@@ -139,28 +140,30 @@ public class OAuth2Service {
                 .build();
     }
 
-    private Client authenticateClient(ClientCredential clientCredential) {
-        if (clientCredential.getClientId() == null) {
+    private void validateClientCredential(ClientCredential clientCredential) {
+        if (clientCredential.getClientId() == null || clientCredential.getClientSecret() == null) {
             throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
         }
+    }
 
+    private Client authenticateClient(ClientCredential clientCredential) {
         Client client = clientRepository
                 .findByClientId(clientCredential.getClientId())
                 .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_CLIENT));
-
-        if (client.getClientSecret() == null) {
-            throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
-        }
 
         String storedClientSecret = client
                 .getClientSecret()
                 .replace("{noop}", "");
 
-        if (!storedClientSecret.equals(clientCredential.getClientSecret())) {
-            throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
-        }
+        validateClientSecret(clientCredential.getClientSecret(), storedClientSecret);
 
         return client;
+    }
+
+    private void validateClientSecret(String clientSecret, String storedClientSecret) {
+        if (!clientSecret.equals(storedClientSecret)) {
+            throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
+        }
     }
 
     private TokenDto.Response handleAuthorizationCodeGrant(
