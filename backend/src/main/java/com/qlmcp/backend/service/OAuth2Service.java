@@ -41,48 +41,53 @@ public class OAuth2Service {
                 new OAuthProviderResponseDto("github", "/oauth2/login/github"));
     }
 
-    public String getAuthorizeCode(AuthorizeDto authorizeDto) {
-        if (!authorizeDto.getResponseType().equals("code")) {
+    public AuthorizeDto.Response getAuthorizeCode(AuthorizeDto.Command command) {
+        if (!command.getResponseType().equals("code")) {
             throw CustomException.badRequest(ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
         }
 
         Client client = clientRepository
-                .findByClientId(authorizeDto.getClientId())
+                .findByClientId(command.getClientId())
                 .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_CLIENT));
 
-        if (!client.getRedirectUris().contains(authorizeDto.getRedirectUri())) {
+        if (!client.getRedirectUris().contains(command.getRedirectUri())) {
             throw CustomException.badRequest(ErrorCode.INVALID_REDIRECT_URI);
         }
 
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(authorizeDto.getRedirectUri())
-                .queryParam("state", authorizeDto.getState());
+                .fromUriString(command.getRedirectUri())
+                .queryParam("state", command.getState());
 
-        if (authorizeDto.getCodeChallenge() == null
-                || authorizeDto.getCodeChallengeMethod() == null) {
+        if (command.getCodeChallenge() == null
+                || command.getCodeChallengeMethod() == null) {
             throw CustomException.redirect(
                     ErrorCode.PKCE_REQUIRED,
                     builder.build().toUriString());
         }
 
-        if (!authorizeDto.getCodeChallengeMethod().equals("S256")
-                && !authorizeDto.getCodeChallengeMethod().equals("plain")) {
+        if (!command.getCodeChallengeMethod().equals("S256")
+                && !command.getCodeChallengeMethod().equals("plain")) {
             throw CustomException.redirect(
                     ErrorCode.PKCE_REQUIRED,
                     builder.build().toUriString());
         }
 
         AuthorizationCode authCode = new AuthorizationCode(
-                authorizeDto.getUserName(),
-                authorizeDto.getClientId(),
-                authorizeDto.getAuthProvider(),
-                authorizeDto.getRedirectUri(),
-                authorizeDto.getCodeChallenge(),
-                authorizeDto.getCodeChallengeMethod(),
-                authorizeDto.getScope(),
-                authorizeDto.getState());
+                command.getUserName(),
+                command.getClientId(),
+                command.getAuthProvider(),
+                command.getRedirectUri(),
+                command.getCodeChallenge(),
+                command.getCodeChallengeMethod(),
+                command.getScope(),
+                command.getState());
         authorizationCodeRepository.save(authCode);
-        return authCode.getCode();
+
+        return AuthorizeDto.Response.builder()
+                .authCode(authCode.getCode())
+                .redirectUri(authCode.getRedirectUri())
+                .state(authCode.getState())
+                .build();
     }
 
     public TokenDto getToken(String grantType, String code, String codeVerifier, String redirectUri,

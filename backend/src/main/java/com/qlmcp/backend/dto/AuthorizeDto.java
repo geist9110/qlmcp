@@ -14,7 +14,7 @@ public final class AuthorizeDto {
     @Setter
     @NoArgsConstructor
     public static class Request {
-        private String cliend_id;
+        private String client_id;
         private String redirect_uri;
         private String code_challenge;
         private String code_challenge_method;
@@ -48,14 +48,14 @@ public final class AuthorizeDto {
 
     public static Command toCommand(Request request, OAuth2AuthenticationToken principal) {
         return Command.builder()
-                .clientId(request.cliend_id)
+                .clientId(request.client_id)
                 .redirectUri(request.redirect_uri)
                 .responseType(request.response_type)
                 .scope(request.scope)
                 .state(request.state)
                 .codeChallenge(request.code_challenge)
                 .codeChallengeMethod(request.code_challenge_method)
-                .authProvider(AuthProvider.valueOf(principal.getAuthorizedClientRegistrationId()))
+                .authProvider(AuthProvider.valueOf(principal.getAuthorizedClientRegistrationId().toUpperCase()))
                 .userName(principal.getName())
                 .build();
     }
