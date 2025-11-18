@@ -9,6 +9,7 @@ import com.qlmcp.backend.dto.AuthorizeDto.ResponseType;
 import com.qlmcp.backend.dto.ClientCredential;
 import com.qlmcp.backend.dto.OAuthProviderResponseDto;
 import com.qlmcp.backend.dto.TokenDto;
+import com.qlmcp.backend.dto.TokenDto.GrantType;
 import com.qlmcp.backend.entity.AuthorizationCode;
 import com.qlmcp.backend.entity.Client;
 import com.qlmcp.backend.entity.RefreshToken;
@@ -106,16 +107,13 @@ public class OAuth2Service {
 
         Client client = authenticateClient(clientCredential);
 
-        if (command.getGrantType().equals("authorization_code")) {
-            return handleAuthorizationCodeGrant(command.getCode(), command.getCodeVerifier(), command.getRedirectUri(),
-                    client);
-        }
-
-        if (command.getGrantType().equals("refresh_token")) {
-            return handleRefreshTokenGrant(command.getRefreshTokenValue(), client);
-        }
-
-        throw CustomException.badRequest(ErrorCode.INVALID_GRANT_TYPE);
+        return switch (command.getGrantType()) {
+            case GrantType.AUTHORIZATION_CODE ->
+                handleAuthorizationCodeGrant(command.getCode(), command.getCodeVerifier(), command.getRedirectUri(),
+                        client);
+            case GrantType.REFRESH_TOKEN -> handleRefreshTokenGrant(command.getRefreshTokenValue(), client);
+            default -> throw CustomException.badRequest(ErrorCode.INVALID_GRANT_TYPE);
+        };
     }
 
     private ClientCredential getClientCredential(

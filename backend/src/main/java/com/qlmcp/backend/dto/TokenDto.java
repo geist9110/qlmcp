@@ -19,20 +19,16 @@ public final class TokenDto {
         private String code;
         private String code_verifier;
         private String redirect_uri;
-        private String client_id;
-        private String client_secret;
         private String refresh_token;
     }
 
     @Getter
     @Builder
     public static class Command {
-        private final String grantType;
+        private final GrantType grantType;
         private final String code;
         private final String codeVerifier;
         private final String redirectUri;
-        private final String clientId;
-        private final String clientSecret;
         private final String refreshTokenValue;
         private final String authHeader;
     }
@@ -50,12 +46,10 @@ public final class TokenDto {
 
     public static Command toCommand(Request request, String authHeader) {
         return Command.builder()
-                .grantType(request.grant_type)
+                .grantType(GrantType.from(request.grant_type))
                 .code(request.code)
                 .codeVerifier(request.code_verifier)
                 .redirectUri(request.redirect_uri)
-                .clientId(request.client_id)
-                .clientSecret(request.client_secret)
                 .refreshTokenValue(request.refresh_token)
                 .authHeader(authHeader)
                 .build();
