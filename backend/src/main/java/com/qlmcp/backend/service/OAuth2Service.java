@@ -169,15 +169,7 @@ public class OAuth2Service {
                 .findByCode(command.getCode())
                 .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_CODE));
 
-        if (!authCode.isValid()
-                || !authCode.getClientId().equals(client.getClientId())
-                || !authCode.getRedirectUri().equals(command.getRedirectUri())
-                || command.getCodeVerifier() == null
-                || !pkceVerifier.verify(authCode.getCodeChallenge(), authCode.getCodeChallengeMethod(),
-                        command.getCodeVerifier())) {
-            authorizationCodeRepository.delete(authCode);
-            throw CustomException.badRequest(ErrorCode.INVALID_CODE);
-        }
+        validateAuthCode(authCode, client, command);
 
         authCode.markUsed();
         authorizationCodeRepository.save(authCode);
@@ -199,6 +191,21 @@ public class OAuth2Service {
                 .refreshToken(refreshToken.getToken())
                 .scope(authCode.getScope())
                 .build();
+    }
+
+    private void validateAuthCode(
+            AuthorizationCode authCode,
+            Client client,
+            TokenDto.Command command) {
+        if (!authCode.isValid()
+                || !authCode.getClientId().equals(client.getClientId())
+                || !authCode.getRedirectUri().equals(command.getRedirectUri())
+                || command.getCodeVerifier() == null
+                || !pkceVerifier.verify(authCode.getCodeChallenge(), authCode.getCodeChallengeMethod(),
+                        command.getCodeVerifier())) {
+            authorizationCodeRepository.delete(authCode);
+            throw CustomException.badRequest(ErrorCode.INVALID_CODE);
+        }
     }
 
     private RefreshToken createRefreshToken(AuthorizationCode authCode, Client client) {
