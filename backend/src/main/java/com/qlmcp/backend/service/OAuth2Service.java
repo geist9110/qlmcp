@@ -189,12 +189,7 @@ public class OAuth2Service {
                         authCode.getScope(),
                         authCode.getAuthProvider());
 
-        RefreshToken refreshToken = new RefreshToken(
-                authCode.getUsername(),
-                client.getClientId(),
-                authCode.getScope(),
-                jwtProperties.getRefreshTokenValidity(),
-                authCode.getAuthProvider());
+        RefreshToken refreshToken = createRefreshToken(authCode, client);
         refreshTokenRepository.save(refreshToken);
 
         return TokenDto.Response.builder()
@@ -204,6 +199,15 @@ public class OAuth2Service {
                 .refreshToken(refreshToken.getToken())
                 .scope(authCode.getScope())
                 .build();
+    }
+
+    private RefreshToken createRefreshToken(AuthorizationCode authCode, Client client) {
+        return new RefreshToken(
+                authCode.getUsername(),
+                client.getClientId(),
+                authCode.getScope(),
+                jwtProperties.getRefreshTokenValidity(),
+                authCode.getAuthProvider());
     }
 
     private TokenDto.Response handleRefreshTokenGrant(String refreshTokenValue, Client client) {
