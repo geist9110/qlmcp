@@ -1,25 +1,31 @@
 package com.qlmcp.backend.service;
 
+import java.util.Base64;
+import java.util.List;
+
 import com.qlmcp.backend.dto.AuthorizeDto;
+import com.qlmcp.backend.dto.AuthorizeDto.CodeChallengeMethod;
+import com.qlmcp.backend.dto.AuthorizeDto.ResponseType;
 import com.qlmcp.backend.dto.ClientCredential;
 import com.qlmcp.backend.dto.OAuthProviderResponseDto;
 import com.qlmcp.backend.dto.TokenDto;
+import com.qlmcp.backend.dto.TokenDto.GrantType;
 import com.qlmcp.backend.entity.AuthorizationCode;
 import com.qlmcp.backend.entity.Client;
 import com.qlmcp.backend.entity.RefreshToken;
 import com.qlmcp.backend.exception.CustomException;
 import com.qlmcp.backend.exception.ErrorCode;
+import com.qlmcp.backend.property.JwtProperties;
 import com.qlmcp.backend.repository.AuthorizationCodeRepository;
 import com.qlmcp.backend.repository.ClientRepository;
 import com.qlmcp.backend.repository.RefreshTokenRepository;
 import com.qlmcp.backend.util.JwtTokenProvider;
 import com.qlmcp.backend.util.PkceVerifier;
-import java.util.Base64;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -29,179 +35,192 @@ public class OAuth2Service {
     private final AuthorizationCodeRepository authorizationCodeRepository;
     private final PkceVerifier pkceVerifier;
     private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProperties jwtProperties;
     private final RefreshTokenRepository refreshTokenRepository;
-
-    @Value("${jwt.refresh-token-validity}")
-    private int refreshTokenValidity;
 
     public List<OAuthProviderResponseDto> getProviders() {
         return List.of(
-            new OAuthProviderResponseDto("google", "/oauth2/login/google"),
-            new OAuthProviderResponseDto("github", "/oauth2/login/github")
-        );
+                new OAuthProviderResponseDto("google", "/oauth2/login/google"),
+                new OAuthProviderResponseDto("github", "/oauth2/login/github"));
     }
 
-    public String getAuthorizeCode(AuthorizeDto authorizeDto) {
-        if (!authorizeDto.getResponseType().equals("code")) {
-            throw CustomException.badRequest(ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
-        }
+    public AuthorizeDto.Response getAuthorizeCode(AuthorizeDto.Command command) {
+        validateResponseType(command.getResponseType());
 
         Client client = clientRepository
-            .findByClientId(authorizeDto.getClientId())
-            .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_CLIENT));
+                .findByClientId(command.getClientId())
+                .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_CLIENT));
 
-        if (!client.getRedirectUris().contains(authorizeDto.getRedirectUri())) {
+        validateRedirectUris(client, command.getRedirectUri());
+        validateCodeChallengeMethod(command.getCodeChallengeMethod(), command.getRedirectUri(), command.getState());
+
+        AuthorizationCode authCode = createAuthorizationCode(command);
+        authorizationCodeRepository.save(authCode);
+
+        return AuthorizeDto.Response.builder()
+                .authCode(authCode.getCode())
+                .redirectUri(authCode.getRedirectUri())
+                .state(authCode.getState())
+                .build();
+    }
+
+    private void validateResponseType(ResponseType responseType) {
+        if (responseType != ResponseType.CODE) {
+            throw CustomException.badRequest(ErrorCode.UNSUPPORTED_RESPONSE_TYPE);
+        }
+    }
+
+    private void validateRedirectUris(Client client, String redirectUri) {
+        if (!client.getRedirectUris().contains(redirectUri)) {
             throw CustomException.badRequest(ErrorCode.INVALID_REDIRECT_URI);
         }
-
-        UriComponentsBuilder builder = UriComponentsBuilder
-            .fromUriString(authorizeDto.getRedirectUri())
-            .queryParam("state", authorizeDto.getState());
-
-        if (authorizeDto.getCodeChallenge() == null
-            || authorizeDto.getCodeChallengeMethod() == null) {
-            throw CustomException.redirect(
-                ErrorCode.PKCE_REQUIRED,
-                builder.build().toUriString()
-            );
-        }
-
-        if (!authorizeDto.getCodeChallengeMethod().equals("S256")
-            && !authorizeDto.getCodeChallengeMethod().equals("plain")) {
-            throw CustomException.redirect(
-                ErrorCode.PKCE_REQUIRED,
-                builder.build().toUriString()
-            );
-        }
-
-        AuthorizationCode authCode = new AuthorizationCode(
-            authorizeDto.getUserName(),
-            authorizeDto.getClientId(),
-            authorizeDto.getRedirectUri(),
-            authorizeDto.getCodeChallenge(),
-            authorizeDto.getCodeChallengeMethod(),
-            authorizeDto.getScope(),
-            authorizeDto.getState()
-        );
-        authorizationCodeRepository.save(authCode);
-        return authCode.getCode();
     }
 
-    public TokenDto getToken(String grantType, String code, String codeVerifier, String redirectUri,
-        String clientId, String clientSecret, String refreshTokenValue, String authHeader) {
-        ClientCredential clientCredential = getClientCredential(authHeader, clientId, clientSecret);
+    private void validateCodeChallengeMethod(CodeChallengeMethod codeChallengeMethod, String redirectUri,
+            String state) {
+        if (codeChallengeMethod != CodeChallengeMethod.S256) {
+            UriComponentsBuilder builder = UriComponentsBuilder
+                    .fromUriString(redirectUri)
+                    .queryParam("state", state);
 
+            throw CustomException.redirect(
+                    ErrorCode.PKCE_REQUIRED,
+                    builder.build().toUriString());
+        }
+    }
+
+    private AuthorizationCode createAuthorizationCode(AuthorizeDto.Command command) {
+        return new AuthorizationCode(
+                command.getUserName(),
+                command.getClientId(),
+                command.getAuthProvider(),
+                command.getRedirectUri(),
+                command.getCodeChallenge(),
+                command.getCodeChallengeMethod().toString(),
+                command.getScope(),
+                command.getState());
+    }
+
+    public TokenDto.Response getToken(TokenDto.Command command) {
+        validateAuthHeader(command.getAuthHeader());
+        ClientCredential clientCredential = parseClientCredential(command.getAuthHeader());
+        validateClientCredential(clientCredential);
         Client client = authenticateClient(clientCredential);
 
-        if (grantType.equals("authorization_code")) {
-            return handleAuthorizationCodeGrant(code, codeVerifier, redirectUri, client);
-        }
-
-        if (grantType.equals("refresh_token")) {
-            return handleRefreshTokenGrant(refreshTokenValue, client);
-        }
-
-        throw CustomException.badRequest(ErrorCode.INVALID_GRANT_TYPE);
+        return switch (command.getGrantType()) {
+            case GrantType.AUTHORIZATION_CODE ->
+                handleAuthorizationCodeGrant(command, client);
+            case GrantType.REFRESH_TOKEN ->
+                handleRefreshTokenGrant(
+                        command.getRefreshTokenValue(),
+                        client);
+            default -> throw CustomException.badRequest(
+                    ErrorCode.INVALID_GRANT_TYPE);
+        };
     }
 
-    private ClientCredential getClientCredential(
-        String authHeader,
-        String clientId,
-        String clientSecret
-    ) {
-        if (authHeader != null && authHeader.startsWith("Basic ")) {
-            String base64Credentials = authHeader.replace("Basic ", "");
-            String credentials = new String(Base64.getDecoder().decode(base64Credentials));
-            String[] parts = credentials.split(":");
+    private void validateAuthHeader(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Basic ")) {
+            throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
+        }
+    }
 
-            return ClientCredential.builder()
+    private ClientCredential parseClientCredential(String authHeader) {
+        String base64Credentials = authHeader.replace("Basic ", "");
+        String credentials = new String(Base64.getDecoder().decode(base64Credentials));
+        String[] parts = credentials.split(":");
+
+        return ClientCredential.builder()
                 .clientId(parts[0])
                 .clientSecret(parts.length > 1 ? parts[1] : null)
                 .build();
-        }
+    }
 
-        return ClientCredential.builder()
-            .clientId(clientId)
-            .clientSecret(clientSecret)
-            .build();
+    private void validateClientCredential(ClientCredential clientCredential) {
+        if (clientCredential.getClientId() == null || clientCredential.getClientSecret() == null) {
+            throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
+        }
     }
 
     private Client authenticateClient(ClientCredential clientCredential) {
-        if (clientCredential.getClientId() == null) {
-            throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
-        }
-
         Client client = clientRepository
-            .findByClientId(clientCredential.getClientId())
-            .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_CLIENT));
-
-        if (client.getClientSecret() == null) {
-            throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
-        }
+                .findByClientId(clientCredential.getClientId())
+                .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_CLIENT));
 
         String storedClientSecret = client
-            .getClientSecret()
-            .replace("{noop}", "");
+                .getClientSecret()
+                .replace("{noop}", "");
 
-        if (!storedClientSecret.equals(clientCredential.getClientSecret())) {
-            throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
-        }
+        validateClientSecret(clientCredential.getClientSecret(), storedClientSecret);
 
         return client;
     }
 
-    private TokenDto handleAuthorizationCodeGrant(
-        String code,
-        String codeVerifier,
-        String redirectUri,
-        Client client
-    ) {
-        AuthorizationCode authCode = authorizationCodeRepository
-            .findByCode(code)
-            .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_CODE));
-
-        if (!authCode.isValid()
-            || !authCode.getClientId().equals(client.getClientId())
-            || !authCode.getRedirectUri().equals(redirectUri)
-            || codeVerifier == null
-            || !pkceVerifier.verify(authCode.getCodeChallenge(), authCode.getCodeChallengeMethod(),
-            codeVerifier)
-        ) {
-            authorizationCodeRepository.delete(authCode);
-            throw CustomException.badRequest(ErrorCode.INVALID_CODE);
+    private void validateClientSecret(String clientSecret, String storedClientSecret) {
+        if (!clientSecret.equals(storedClientSecret)) {
+            throw CustomException.badRequest(ErrorCode.INVALID_CLIENT);
         }
+    }
+
+    private TokenDto.Response handleAuthorizationCodeGrant(
+            TokenDto.Command command,
+            Client client) {
+        AuthorizationCode authCode = authorizationCodeRepository
+                .findByCode(command.getCode())
+                .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_CODE));
+
+        validateAuthCode(authCode, client, command);
 
         authCode.markUsed();
         authorizationCodeRepository.save(authCode);
 
         String accessToken = jwtTokenProvider
-            .generateAccessToken(
-                authCode.getUsername(),
-                client.getClientId(),
-                authCode.getScope()
-            );
+                .generateAccessToken(
+                        authCode.getUsername(),
+                        client.getClientId(),
+                        authCode.getScope(),
+                        authCode.getAuthProvider());
 
-        RefreshToken refreshToken = new RefreshToken(
-            authCode.getUsername(),
-            client.getClientId(),
-            authCode.getScope(),
-            refreshTokenValidity
-        );
+        RefreshToken refreshToken = createRefreshToken(authCode, client);
         refreshTokenRepository.save(refreshToken);
 
-        return TokenDto.builder()
-            .accessToken(accessToken)
-            .tokenType("Bearer")
-            .expiresIn(jwtTokenProvider.getAccessTokenValidity())
-            .refreshToken(refreshToken.getToken())
-            .scope(authCode.getScope())
-            .build();
+        return TokenDto.Response.builder()
+                .accessToken(accessToken)
+                .tokenType("Bearer")
+                .expiresIn(jwtTokenProvider.getAccessTokenValidity())
+                .refreshToken(refreshToken.getToken())
+                .scope(authCode.getScope())
+                .build();
     }
 
-    private TokenDto handleRefreshTokenGrant(String refreshTokenValue, Client client) {
+    private void validateAuthCode(
+            AuthorizationCode authCode,
+            Client client,
+            TokenDto.Command command) {
+        if (!authCode.isValid()
+                || !authCode.getClientId().equals(client.getClientId())
+                || !authCode.getRedirectUri().equals(command.getRedirectUri())
+                || command.getCodeVerifier() == null
+                || !pkceVerifier.verify(authCode.getCodeChallenge(), authCode.getCodeChallengeMethod(),
+                        command.getCodeVerifier())) {
+            authorizationCodeRepository.delete(authCode);
+            throw CustomException.badRequest(ErrorCode.INVALID_CODE);
+        }
+    }
+
+    private RefreshToken createRefreshToken(AuthorizationCode authCode, Client client) {
+        return new RefreshToken(
+                authCode.getUsername(),
+                client.getClientId(),
+                authCode.getScope(),
+                jwtProperties.getRefreshTokenValidity(),
+                authCode.getAuthProvider());
+    }
+
+    private TokenDto.Response handleRefreshTokenGrant(String refreshTokenValue, Client client) {
         RefreshToken refreshToken = refreshTokenRepository
-            .findByToken(refreshTokenValue)
-            .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_TOKEN));
+                .findByToken(refreshTokenValue)
+                .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_TOKEN));
 
         if (!refreshToken.getClientId().equals(client.getClientId())) {
             throw CustomException.badRequest(ErrorCode.INVALID_TOKEN);
@@ -212,17 +231,17 @@ public class OAuth2Service {
         }
 
         String accessToken = jwtTokenProvider.generateAccessToken(
-            refreshToken.getUsername(),
-            client.getClientId(),
-            refreshToken.getScope()
-        );
+                refreshToken.getUsername(),
+                client.getClientId(),
+                refreshToken.getScope(),
+                refreshToken.getAuthProvider());
 
-        return TokenDto.builder()
-            .accessToken(accessToken)
-            .tokenType("Bearer")
-            .expiresIn(jwtTokenProvider.getAccessTokenValidity())
-            .refreshToken(refreshToken.getToken())
-            .scope(refreshToken.getScope())
-            .build();
+        return TokenDto.Response.builder()
+                .accessToken(accessToken)
+                .tokenType("Bearer")
+                .expiresIn(jwtTokenProvider.getAccessTokenValidity())
+                .refreshToken(refreshToken.getToken())
+                .scope(refreshToken.getScope())
+                .build();
     }
 }
