@@ -1,0 +1,47 @@
+name: "Issue"
+description: "Feature / Bug / Refactor 공용 이슈 템플릿"
+title: "[TYPE] 간단한 제목"
+labels: []
+
+body:
+  - type: textarea
+    attributes:
+      label: 🎯 목적(Why)
+      description: "왜 이 작업을 해야 하는가?"
+      placeholder: |
+        - 로그인 실패 응답이 일관되지 않음
+        - SecurityConfig가 너무 커서 분리가 필요함
+        - 토큰 검증 로직이 여러 곳에 흩어져 있음
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 🧩 변경사항(What)
+      description: "이 이슈에서 실제로 수행할 작업들 (브랜치에서 할 행동 단위)"
+      placeholder: |
+        - SecurityConfig에서 FilterChain 설정 분리
+        - TokenValidator 유틸 클래스로 추출
+        - /login 실패 시 401 + 공통 에러 포맷으로 응답
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: ✔️ 완료 기준(DoD)
+      description: "이 이슈가 끝났다고 판단할 수 있는 체크리스트"
+      placeholder: |
+        - 로그인/회원가입/토큰 흐름 정상 동작 확인
+        - 관련 테스트(수동 또는 자동) 통과
+        - 기존 동작에 Regression 없음
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 🔗 참고(Optional)
+      description: "관련 문서, 코드, Obsidian 노트, 기존 이슈/PR 등"
+      placeholder: |
+        - Obsidian: security-refactor-2025-02
+        - 관련 PR: #12
+        - 참고 문서/링크 등
