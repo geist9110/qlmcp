@@ -109,11 +109,7 @@ public class OAuth2Service {
 
         return switch (command.getGrantType()) {
             case GrantType.AUTHORIZATION_CODE ->
-                handleAuthorizationCodeGrant(
-                        command.getCode(),
-                        command.getCodeVerifier(),
-                        command.getRedirectUri(),
-                        client);
+                handleAuthorizationCodeGrant(command, client);
             case GrantType.REFRESH_TOKEN ->
                 handleRefreshTokenGrant(
                         command.getRefreshTokenValue(),
@@ -167,20 +163,18 @@ public class OAuth2Service {
     }
 
     private TokenDto.Response handleAuthorizationCodeGrant(
-            String code,
-            String codeVerifier,
-            String redirectUri,
+            TokenDto.Command command,
             Client client) {
         AuthorizationCode authCode = authorizationCodeRepository
-                .findByCode(code)
+                .findByCode(command.getCode())
                 .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_CODE));
 
         if (!authCode.isValid()
                 || !authCode.getClientId().equals(client.getClientId())
-                || !authCode.getRedirectUri().equals(redirectUri)
-                || codeVerifier == null
+                || !authCode.getRedirectUri().equals(command.getRedirectUri())
+                || command.getCodeVerifier() == null
                 || !pkceVerifier.verify(authCode.getCodeChallenge(), authCode.getCodeChallengeMethod(),
-                        codeVerifier)) {
+                        command.getCodeVerifier())) {
             authorizationCodeRepository.delete(authCode);
             throw CustomException.badRequest(ErrorCode.INVALID_CODE);
         }
