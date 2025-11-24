@@ -23,11 +23,9 @@ public class AccountService {
     public Account getAccountFromContext() {
 
         Jwt jwt = parseJwtAuthenticationToken();
-        AuthProvider provider = AuthProvider.valueOf(jwt.getClaim("provider"));
-        String providerId = jwt.getSubject();
 
         return accountRepository
-                .findByProviderAndProviderId(provider, providerId)
+                .findByProviderAndProviderId(parseProvider(jwt), jwt.getSubject())
                 .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_TOKEN));
     }
 
@@ -38,5 +36,13 @@ public class AccountService {
             throw CustomException.badRequest(ErrorCode.INVALID_TOKEN);
         }
         return (Jwt) jwtAuth.getPrincipal();
+    }
+
+    private AuthProvider parseProvider(Jwt jwt) {
+        String provider = jwt.getClaim("provider");
+        if (provider == null || provider.isBlank()) {
+            throw CustomException.badRequest(ErrorCode.INVALID_TOKEN);
+        }
+        return AuthProvider.valueOf(provider);
     }
 }
