@@ -1,7 +1,5 @@
 package com.qlmcp.backend.service;
 
-import java.util.Optional;
-
 import com.qlmcp.backend.dto.AuthProvider;
 import com.qlmcp.backend.entity.Account;
 import com.qlmcp.backend.exception.CustomException;
@@ -23,20 +21,22 @@ public class AccountService {
     private final AccountRepository accountRepository;
 
     public Account getAccountFromContext() {
+
+        Jwt jwt = parseJwtAuthenticationToken();
+        AuthProvider provider = AuthProvider.valueOf(jwt.getClaim("provider"));
+        String providerId = jwt.getSubject();
+
+        return accountRepository
+                .findByProviderAndProviderId(provider, providerId)
+                .orElseThrow(() -> CustomException.badRequest(ErrorCode.INVALID_TOKEN));
+    }
+
+    private Jwt parseJwtAuthenticationToken() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (!(authentication instanceof JwtAuthenticationToken jwtAuth)) {
             throw CustomException.badRequest(ErrorCode.INVALID_TOKEN);
         }
-        Jwt jwt = (Jwt) jwtAuth.getPrincipal();
-        AuthProvider provider = AuthProvider.valueOf(jwt.getClaim("provider"));
-        String providerId = jwt.getSubject();
-        Optional<Account> account = accountRepository
-                .findByProviderAndProviderId(provider, providerId);
-
-        if (account.isEmpty()) {
-            throw CustomException.badRequest(ErrorCode.INVALID_TOKEN);
-        }
-        return account.get();
+        return (Jwt) jwtAuth.getPrincipal();
     }
 }
