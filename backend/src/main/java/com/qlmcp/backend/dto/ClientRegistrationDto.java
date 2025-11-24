@@ -33,7 +33,7 @@ public final class ClientRegistrationDto {
 
     public static Command toCommand(Request request) {
         return new Command(
-                request.clientName,
-                request.redirectUris);
+                request.clientName(),
+                request.redirectUris());
     }
 }
