@@ -4,8 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import com.qlmcp.backend.dto.ClientRegistrationRequest;
-import com.qlmcp.backend.dto.ClientRegistrationResponse;
+import com.qlmcp.backend.dto.ClientRegistrationDto;
 import com.qlmcp.backend.entity.Client;
 import com.qlmcp.backend.repository.ClientRepository;
 
@@ -27,8 +26,8 @@ public class DcrController {
     private final ClientRepository clientRepository;
 
     @PostMapping("/register")
-    public ResponseEntity<ClientRegistrationResponse> registerClient(
-            @RequestBody ClientRegistrationRequest request) {
+    public ResponseEntity<ClientRegistrationDto.Response> registerClient(
+            @RequestBody ClientRegistrationDto.Request request) {
         Client client = clientRepository
                 .findByClientName(request.clientName())
                 .orElseGet(
@@ -51,7 +50,7 @@ public class DcrController {
                         });
 
         return ResponseEntity.ok(
-                new ClientRegistrationResponse(
+                new ClientRegistrationDto.Response(
                         client.getClientId(),
                         client.getClientSecret(),
                         request.redirectUris()));
