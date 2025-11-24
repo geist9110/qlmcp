@@ -17,11 +17,23 @@ public final class ClientRegistrationDto {
             List<String> redirectUris) {
     }
 
+    public static record Command(
+            String clientName,
+            List<String> redirectUris) {
+
+    }
+
     @JsonNaming(SnakeCaseStrategy.class)
     public static record Response(
             String clientId,
             String clientSecret,
             List<String> redirectUris) {
 
+    }
+
+    public static Command toCommand(Request request) {
+        return new Command(
+                request.clientName,
+                request.redirectUris);
     }
 }
