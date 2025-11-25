@@ -1,25 +1,76 @@
 # QLMCP(Query Language Model Context Protocol)
 
-> 하나의 Tool로 MCP 서비스를 사용하세요.
+> 여러 MCP 서버를 하나의 MCP Tool로 통합하는 Natural Language Gateway
 
-QLMCP는 자연어 요청만으로 여러 MCP(Model Context Protocol) 서버들을 지능적으로 연결해주는 Gateway 서비스입니다.  
-복잡한 MCP 서버 설정 없이, 단 하나의 URL만 등록하면 모든 기능을 사용할 수 있습니다.
+QLMCP는 다양한 MCP(Model Context Protocol) 서버를 **단일 MCP Tool(`query`)**로 통합하여 제공하는 Gateway입니다.
 
-## ✨ 주요 기능
+하나의 MCP 서버 URL만 등록하면, 사용자와 모델은 자연어 요청만으로 필요한 MCP 기능을 자동으로 사용할 수 있습니다.
 
-### 현재 지원하는 MCP 서버
+MCP Tool을 직접 선택하거나, 여러 MCP 서버를 일일이 등록할 필요가 없습니다.
 
-- [korea_weather_mcp](https://github.com/ohhan777/korea_weather)
-- [context7](https://github.com/upstash/context7)
-- [naver-search-mcp](https://github.com/isnow890/naver-search-mcp)
+## ✨ Why QLMCP?
 
-### 핵심 기능
+오늘날 MCP 생태계의 도구 연결은 쉽지만 다음과 같은 불편함이 있습니다.
 
-- `query`: 자연어로 요청 시 적절한 MCP Tool을 선택하여 처리합니다.
+### ❌ 기존 MCP의 구조적 문제
+
+- MCP 서버마다 별도로 등록해야 함
+- 어떤 요청이 어떤 MCP Tool을 통해 사용해야 하는지 사용자가 직접 판단해야 함
+- 대용량 텍스트를 불러오는 Tool 호출이 모델 컨텍스트를 급격히 소모시키는 문제
+
+### ✅ QLMCP의 해결 방식
+
+- 단일 MCP 서버 URL만 등록하면 전체 기능 사용 가능
+- AI 기반 라우팅으로 적절한 MCP Tool 자동 호출
+- 응답에 대해 AI를 통한 전처리를 통해 모델 컨텍스트 최소화
+
+이를 통해 **MCP의 복잡성을 AI와 사용자에게서 제거**할 수 있습니다.
+
+## 📝 주요 기능
+
+### 1️⃣ 자연어 Tool 라우팅
+
+사용자는 단순히 자연어로 요청하면 됩니다.
+
+QLMCP는 내부적으로 여러 MCP 서버의 Tool들 중 요청에 가장 적절한 MCP Tool을 자동으로 선택합니다.
 
 ```
-"창원의 맛집이 궁금해" -> "naver-search-mcp의 검색 기능 사용" -> "{result: {name: ..., address: ...}}"
+"내일 비 와?"
+→ korea_weather_mcp.weather
+
+"창원의 브런치 카페 찾아줘"
+→ naver-search-mcp.search
+
+"이 프로젝트 기록해줘"
+→ memory.create
 ```
+
+### 2️⃣ 단일 MCP Tool:`query`
+
+모든 기능은 다음 형태로 호출됩니다.
+
+```
+{
+  "tool": "query",
+  "args": {
+    "query": "내일 서울 날씨 알려줘"
+  }
+}
+```
+
+내부적으로 어떤 MCP 서버, Tool을 호출하든 사용자와 AI에게 노출되는 인터페이스는 단 하나입니다.
+
+### 3️⃣ 지원하는 MCP 서버
+
+- [korea_weather_mcp](https://github.com/ohhan777/korea_weather): 한국 기상 정보
+- [context7](https://github.com/upstash/context7): 개발 문서
+- [naver-search-mcp](https://github.com/isnow890/naver-search-mcp): 네이버 검색
+- Memory: PARA 기반 개인화 Memory
+
+### 4️⃣ 토큰 최적화
+
+QLMCP는 모델이 MCP Tool을 직접 호출하는 대신, 서버가 MCP Tool의 결과를 필요한 부분만 AI 기반으로 추출하여 전달합니다.
+이를 통해 모델 컨텍스트 과소비 방지, 대형 문서 기반 Tool 호출의 부하 감소, 추가적인 요약 및 필터링이 가능합니다.
 
 ## 🚀 시작하기
 
@@ -29,25 +80,19 @@ QLMCP는 자연어 요청만으로 여러 MCP(Model Context Protocol) 서버들�
 2. 커넥터 탭 선택
 3. 커스텀 커넥터 추가
 4. 아래 정보 입력
-    - 이름 : QLMCP
-    - 원격 MCP 서버 URL : `https://mcp.qlmcp.com/sse`
+   - 이름 : QLMCP
+   - 원격 MCP 서버 URL : `https://mcp.qlmcp.com/mcp`
 
-## 🗺️ 로드맵
+### 예시
 
-### v1.1.0(현재 버전)
-
-- 기본 query 툴 사용 가능
-- 3개 MCP 서버 통합
-- STREAMABLE-HTTP 지원
-- 소셜 로그인(Google, Github) 지원
-
-### 향후 계획
-
-- 더 많은 MCP 서버 통합
-- 사용자 맞춤형 툴 설정 기능
-- 사용자 맞춤형 메모리 기능
-- 웹 대시보드를 통한 툴 관리 기능
+```
+User: "QLMCP를 통해 창원의 맛집을 검색해줘"
+→ Claude: QLMCP("창원의 맛집을 검색해줘")
+→ QLMCP : {"result": [...]}
+→ Claude: "창원의 맛집은 ...이 있습니다."
+```
 
 ## 📝 라이선스
 
 MIT License
+
