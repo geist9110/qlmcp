@@ -26,8 +26,8 @@ repositories {
 }
 
 ext {
-    set('snippetsDir', file("build/generated-snippets"))
-    springAiVersion = "1.1.0-M3"
+    set('snippetsDir', file('build/generated-snippets'))
+    springAiVersion = '1.1.0'
 }
 
 dependencies {
@@ -54,6 +54,7 @@ dependencies {
 
     // Util dependencies
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

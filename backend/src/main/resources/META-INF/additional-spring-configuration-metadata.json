@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "spring.ai.mcp.server.tool-callback-converter",
+      "type": "java.lang.Boolean",
+      "description": "Enable or disable MCP Server tool callback conversion.",
+      "defaultValue": true
+    }
+  ]
+}
