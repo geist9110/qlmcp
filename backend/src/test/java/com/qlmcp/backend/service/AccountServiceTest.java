@@ -16,6 +16,7 @@ import com.qlmcp.backend.repository.AccountRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,8 +27,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
+@Tag("unit")
 @ExtendWith(MockitoExtension.class)
 public class AccountServiceTest {
 
@@ -41,7 +44,10 @@ public class AccountServiceTest {
     Authentication authentication;
 
     @Mock
-    OAuth2AuthenticationToken authenticationToken;
+    JwtAuthenticationToken authenticationToken;
+
+    @Mock
+    Jwt jwt;
 
     @InjectMocks
     AccountService accountService;
@@ -74,41 +80,43 @@ public class AccountServiceTest {
     @DisplayName("[EXCEPTION] getAccountFromContext - not exist account token input -> badRequest is thrown")
     void getAccountFromContext_AccountIsMissing_throwInvalidToken() {
         // given
-        String expectAuthorizedClientRegistrationId = "GITHUB";
-        String invalidUserName = "invalid-user";
+        AuthProvider expectProvider = AuthProvider.GITHUB;
+        String invalidProviderId = "invalid-user";
 
         // when
         when(securityContext.getAuthentication()).thenReturn(authenticationToken);
-        when(authenticationToken.getAuthorizedClientRegistrationId()).thenReturn(expectAuthorizedClientRegistrationId);
-        when(authenticationToken.getName()).thenReturn(invalidUserName);
-        when(accountRepository.findByProviderAndProviderId(AuthProvider.GITHUB, invalidUserName))
+        when(authenticationToken.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(invalidProviderId);
+        when(jwt.getClaim("provider")).thenReturn("GITHUB");
+        when(accountRepository.findByProviderAndProviderId(expectProvider, invalidProviderId))
                 .thenReturn(Optional.empty());
 
         // then
         CustomException exception = assertThrows(CustomException.class, () -> accountService.getAccountFromContext());
 
         assertEquals(ErrorCode.INVALID_TOKEN, exception.getErrorCode());
-        verify(accountRepository).findByProviderAndProviderId(AuthProvider.GITHUB, invalidUserName);
+        verify(accountRepository).findByProviderAndProviderId(expectProvider, invalidProviderId);
     }
 
     @Test
     @DisplayName("[SUCCESS] getAccountFromContext - valid input -> return account")
     void getAccountFromContext_AccountExists_returnAccount() {
         // given
-        String expectAuthorizedClientRegistrationId = "GOOGLE";
-        String expectUserName = "existing-user";
-        Account expectAccount = new Account(AuthProvider.GOOGLE, expectUserName);
+        AuthProvider expectProvider = AuthProvider.GOOGLE;
+        String expectProviderId = "existing-user";
+        Account expectAccount = new Account(expectProvider, expectProviderId);
 
         // when
         when(securityContext.getAuthentication()).thenReturn(authenticationToken);
-        when(authenticationToken.getAuthorizedClientRegistrationId()).thenReturn(expectAuthorizedClientRegistrationId);
-        when(authenticationToken.getName()).thenReturn(expectUserName);
-        when(accountRepository.findByProviderAndProviderId(AuthProvider.GOOGLE, expectUserName))
+        when(authenticationToken.getPrincipal()).thenReturn(jwt);
+        when(jwt.getSubject()).thenReturn(expectProviderId);
+        when(jwt.getClaim("provider")).thenReturn("GOOGLE");
+        when(accountRepository.findByProviderAndProviderId(expectProvider, expectProviderId))
                 .thenReturn(Optional.of(expectAccount));
 
         // then
         Account actualAccount = accountService.getAccountFromContext();
         assertEquals(expectAccount, actualAccount);
-        verify(accountRepository).findByProviderAndProviderId(AuthProvider.GOOGLE, expectUserName);
+        verify(accountRepository).findByProviderAndProviderId(expectProvider, expectProviderId);
     }
 }
