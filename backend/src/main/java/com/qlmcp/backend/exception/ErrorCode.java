@@ -40,8 +40,8 @@ public enum ErrorCode {
 
     // Quota Error
     QUOTA_EXCEEDED(
-            "QOUTA_001",
-            "qouta exceeded");
+            "QUOTA_001",
+            "quota exceeded");
 
     private final String code;
     private final String message;
