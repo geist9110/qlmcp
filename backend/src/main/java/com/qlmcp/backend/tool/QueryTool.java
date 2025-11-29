@@ -1,14 +1,19 @@
 package com.qlmcp.backend.tool;
 
-import com.qlmcp.backend.config.PromptConfig;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.extern.slf4j.Slf4j;
+
+import com.qlmcp.backend.annotation.DailyQuota;
+import com.qlmcp.backend.config.PromptConfig;
+import com.qlmcp.backend.dto.QuotaMethod;
+
 import org.springaicommunity.mcp.annotation.McpTool;
 import org.springaicommunity.mcp.annotation.McpToolParam;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Component;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -24,17 +29,17 @@ public class QueryTool {
         this.LOG_TAG_PATTERN = Pattern.compile(promptConfig.getLogTag(), Pattern.DOTALL);
     }
 
+    @DailyQuota(limit = 100, method = QuotaMethod.QUERY)
     @McpTool(name = "query", description = "Execute query with custom tools")
     String query(@McpToolParam String query) {
         String response = chatClient
-            .prompt()
-            .user(promptConfig.getUserPromptStart() + query + promptConfig.getUserPromptEnd())
-            .call()
-            .content();
+                .prompt()
+                .user(promptConfig.getUserPromptStart() + query + promptConfig.getUserPromptEnd())
+                .call()
+                .content();
 
         parseLogBlock(response).ifPresent(
-            content -> log.info("Log content extracted:\n" + content)
-        );
+                content -> log.info("Log content extracted:\n" + content));
 
         return removeLogBlock(response);
     }
