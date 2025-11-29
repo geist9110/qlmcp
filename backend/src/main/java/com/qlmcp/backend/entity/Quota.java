@@ -40,6 +40,7 @@ public class Quota {
         this.account = account;
         this.date = date;
         this.method = method;
+        this.count = 0;
     }
 
     public boolean isLimitExceeded(int limit) {
