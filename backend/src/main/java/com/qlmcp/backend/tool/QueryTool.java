@@ -20,12 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 public class QueryTool {
 
     private final ChatClient chatClient;
-    private final PromptConfig promptConfig;
     private final Pattern LOG_TAG_PATTERN;
 
     public QueryTool(ChatClient chatClient, PromptConfig promptConfig) {
         this.chatClient = chatClient;
-        this.promptConfig = promptConfig;
         this.LOG_TAG_PATTERN = Pattern.compile(promptConfig.getLogTag(), Pattern.DOTALL);
     }
 
@@ -34,7 +32,7 @@ public class QueryTool {
     String query(@McpToolParam String query) {
         String response = chatClient
                 .prompt()
-                .user(promptConfig.getUserPromptStart() + query + promptConfig.getUserPromptEnd())
+                .user(query)
                 .call()
                 .content();
 
