@@ -7,8 +7,3 @@ spring:
         options:
           model: gemini-2.5-flash
           reasoning-effort: none
-          prompt:
-            system-prompt: ${AI_SYSTEM_PROMPT}
-            user-prompt-start: ${AI_USER_PROMPT_START}
-            user-prompt-end: ${AI_USER_PROMPT_END}
-            log-tag: ${AI_LOG_TAG}
