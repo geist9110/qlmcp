@@ -1,5 +1,6 @@
 package com.qlmcp.backend.config;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 
@@ -11,16 +12,20 @@ import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
 
 @Configuration
 public class ChatConfig {
 
+    @Value("classpath:prompts/system-prompt.md")
+    private Resource systemPrompt;
+
     @Bean
     ChatClient chatClient(
             ChatClient.Builder chatClientBuilder,
-            PromptConfig promptConfig,
             List<ToolCallbackProvider> toolCallbackProviders) {
         List<ToolCallback> providerToolCallbacks = toolCallbackProviders
                 .stream()
@@ -29,7 +34,7 @@ public class ChatConfig {
                 .toList();
 
         return chatClientBuilder
-                .defaultSystem(promptConfig.getSystemPrompt())
+                .defaultSystem(systemPrompt, StandardCharsets.UTF_8)
                 .defaultToolCallbacks(providerToolCallbacks)
                 .defaultAdvisors(new WrapUserInputAdvisor())
                 .build();
@@ -66,5 +71,4 @@ public class ChatConfig {
         }
 
     }
-
 }
