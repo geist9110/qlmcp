@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 public class ChatConfig {
 
     @Bean
-    public ChatClient chatClient(
+    ChatClient chatClient(
             ChatClient.Builder chatClientBuilder,
             PromptConfig promptConfig,
             List<ToolCallbackProvider> toolCallbackProviders) {
