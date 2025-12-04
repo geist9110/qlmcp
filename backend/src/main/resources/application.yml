@@ -23,6 +23,8 @@ spring:
   config:
     activate:
       on-profile: prod
+    import:
+      - aws-parameterstore:/qlmcp/prod/
 ---
 spring:
   config:
