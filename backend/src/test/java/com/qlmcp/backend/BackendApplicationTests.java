@@ -15,8 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.ActiveProfiles;
 
-import io.modelcontextprotocol.client.McpSyncClient;
-import io.modelcontextprotocol.server.McpServerFeatures.SyncToolSpecification;
+import io.modelcontextprotocol.server.McpStatelessServerFeatures.SyncToolSpecification;
 
 @Tag("integration")
 @ActiveProfiles("test")
@@ -25,9 +24,6 @@ class BackendApplicationTests {
 
     @Autowired
     private ObjectProvider<List<SyncToolSpecification>> tools;
-
-    @Autowired
-    ObjectProvider<List<McpSyncClient>> syncMcpClients;
 
     @Autowired
     private Environment environment;
