@@ -13,13 +13,14 @@ import * as rds from "aws-cdk-lib/aws-rds";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Construct, IConstruct } from "constructs";
+import { MainServerConstruct } from "./compute/mainServerConstruct";
 import { BaseConstructProps } from "./core/baseConstruct";
 import { NetworkConstruct } from "./network/networkConstruct";
 
 export class InfraStack extends Stack {
   public readonly env: string;
   public readonly network: NetworkConstruct;
-  public readonly mainServer: ec2.Instance;
+  public readonly mainServer: MainServerConstruct;
   public readonly mcpServer: ec2.Instance;
   public readonly database: rds.DatabaseInstance;
 
@@ -38,55 +39,10 @@ export class InfraStack extends Stack {
 
     this.network = new NetworkConstruct(this, `network`, common);
 
-    const mainServerSg = new ec2.SecurityGroup(this, "qlmcp-main-sg", {
+    this.mainServer = new MainServerConstruct(this, "main-server", {
+      ...common,
       vpc: this.network.vpc,
-      allowAllOutbound: true,
-      securityGroupName: "qlmcp-main-sg",
-      description: "Security group for qlmcp main server",
     });
-
-    mainServerSg.addIngressRule(
-      ec2.Peer.anyIpv4(),
-      ec2.Port.tcp(443),
-      "Allow HTTPS traffic from anywhere(IPv4)",
-    );
-
-    mainServerSg.addIngressRule(
-      ec2.Peer.anyIpv6(),
-      ec2.Port.tcp(443),
-      "Allow HTTPS traffic from anywhere(IPv6)",
-    );
-
-    mainServerSg.addIngressRule(
-      ec2.Peer.anyIpv4(),
-      ec2.Port.tcp(80),
-      "Allow HTTP traffic from anywhere(IPv4)",
-    );
-
-    const mainServerRole = new iam.Role(this, "qlmcp-main-server-role", {
-      assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
-      managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          "AmazonSSMManagedInstanceCore",
-        ),
-        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonS3ReadOnlyAccess"),
-      ],
-    });
-
-    this.mainServer = new ec2.Instance(this, "qlmcp-main-server", {
-      vpc: this.network.vpc,
-      instanceType: ec2.InstanceType.of(
-        ec2.InstanceClass.T3,
-        ec2.InstanceSize.SMALL,
-      ),
-      machineImage: ec2.MachineImage.latestAmazonLinux2023(),
-      vpcSubnets: {
-        subnetType: ec2.SubnetType.PUBLIC,
-      },
-      securityGroup: mainServerSg,
-      role: mainServerRole,
-    });
-    this.addTags(this.mainServer, "qlmcp-main-server");
 
     const mcpServerSg = new ec2.SecurityGroup(this, "qlmcp-mcp-sg", {
       vpc: this.network.vpc,
@@ -96,7 +52,7 @@ export class InfraStack extends Stack {
     });
 
     mcpServerSg.addIngressRule(
-      ec2.Peer.securityGroupId(mainServerSg.securityGroupId),
+      ec2.Peer.securityGroupId(this.mainServer.securityGroup.securityGroupId),
       ec2.Port.allTraffic(),
       "Allow all traffic from qlmcp main server",
     );
@@ -133,7 +89,7 @@ export class InfraStack extends Stack {
       zone: hostedZone,
       recordName: "mcp",
       target: route53.RecordTarget.fromIpAddresses(
-        this.mainServer.instancePublicIp,
+        this.mainServer.instance.instancePublicIp,
       ),
       ttl: Duration.minutes(5),
       comment: "Route mcp subdomain to main server",
@@ -160,7 +116,7 @@ export class InfraStack extends Stack {
     });
 
     databaseSG.addIngressRule(
-      ec2.Peer.securityGroupId(mainServerSg.securityGroupId),
+      ec2.Peer.securityGroupId(this.mainServer.securityGroup.securityGroupId),
       ec2.Port.tcp(3306),
     );
 
