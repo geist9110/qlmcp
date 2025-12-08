@@ -8,12 +8,12 @@ import {
 } from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import { SecurityGroup } from "aws-cdk-lib/aws-ec2";
-import * as iam from "aws-cdk-lib/aws-iam";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Construct, IConstruct } from "constructs";
 import { MainServerConstruct } from "./compute/mainServerConstruct";
+import { McpServerConstruct } from "./compute/mcpServerConstruct";
 import { BaseConstructProps } from "./core/baseConstruct";
 import { NetworkConstruct } from "./network/networkConstruct";
 
@@ -21,7 +21,7 @@ export class InfraStack extends Stack {
   public readonly env: string;
   public readonly network: NetworkConstruct;
   public readonly mainServer: MainServerConstruct;
-  public readonly mcpServer: ec2.Instance;
+  public readonly mcpServer: McpServerConstruct;
   public readonly database: rds.DatabaseInstance;
 
   constructor(
@@ -44,43 +44,11 @@ export class InfraStack extends Stack {
       vpc: this.network.vpc,
     });
 
-    const mcpServerSg = new ec2.SecurityGroup(this, "qlmcp-mcp-sg", {
+    this.mcpServer = new McpServerConstruct(this, "mcp-server", {
+      ...common,
       vpc: this.network.vpc,
-      allowAllOutbound: true,
-      securityGroupName: "qlmcp-mcp-sg",
-      description: "Security group for qlmcp mcp server",
+      mainServerSecurityGroup: this.mainServer.securityGroup,
     });
-
-    mcpServerSg.addIngressRule(
-      ec2.Peer.securityGroupId(this.mainServer.securityGroup.securityGroupId),
-      ec2.Port.allTraffic(),
-      "Allow all traffic from qlmcp main server",
-    );
-
-    const mcpServerRole = new iam.Role(this, "qlmcp-mcp-server-role", {
-      assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
-      managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          "AmazonSSMManagedInstanceCore",
-        ),
-        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonS3ReadOnlyAccess"),
-      ],
-    });
-
-    this.mcpServer = new ec2.Instance(this, "qlmcp-mcp-server", {
-      vpc: this.network.vpc,
-      instanceType: ec2.InstanceType.of(
-        ec2.InstanceClass.T3,
-        ec2.InstanceSize.MICRO,
-      ),
-      machineImage: ec2.MachineImage.latestAmazonLinux2023(),
-      vpcSubnets: {
-        subnetType: ec2.SubnetType.PUBLIC,
-      },
-      securityGroup: mcpServerSg,
-      role: mcpServerRole,
-    });
-    this.addTags(this.mcpServer, "qlmcp-mcp-server");
 
     const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
       domainName: domainName,
