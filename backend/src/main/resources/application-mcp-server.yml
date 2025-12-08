@@ -15,5 +15,5 @@ spring:
         tool-change-notification: true
         request-timeout: 180s
         type: sync
-        protocol: streamable
+        protocol: STATELESS
         tool-callback-converter: false
