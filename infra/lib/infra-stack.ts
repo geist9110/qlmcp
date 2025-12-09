@@ -8,7 +8,6 @@ import { DnsConstruct } from "./dns/dnsConstruct";
 import { NetworkConstruct } from "./network/networkConstruct";
 
 export class InfraStack extends Stack {
-  public readonly env: string;
   public readonly network: NetworkConstruct;
   public readonly mainServer: MainServerConstruct;
   public readonly mcpServer: McpServerConstruct;
@@ -17,7 +16,6 @@ export class InfraStack extends Stack {
 
   constructor(scope: Construct, id: string, env: string, props?: StackProps) {
     super(scope, id, props);
-    this.env = env;
     const common: BaseConstructProps = { envName: env, project: "qlmcp" };
 
     this.network = new NetworkConstruct(this, `network`, common);
