@@ -9,13 +9,18 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "env:ssm": "ts-node scripts/env-to-ssm.ts"
+    "env:ssm": "ts-node scripts/env-to-ssm.ts",
+    "cdk:deploy:dev": "NODE_ENV=dev cdklocal deploy",
+    "cdk:deploy:prod": "NODE_ENV=prod cdk deploy",
+    "localstack": "localstack start"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "@types/node": "^22.7.9",
     "aws-cdk": "2.1012.0",
+    "aws-cdk-local": "^3.0.1",
     "jest": "^29.7.0",
+    "localstack": "^1.0.0",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "~5.6.3"
