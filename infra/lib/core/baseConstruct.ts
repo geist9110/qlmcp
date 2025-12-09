@@ -22,6 +22,6 @@ export class BaseConstruct extends Construct {
   private addTags(id: string) {
     Tags.of(this).add("Project", this.project);
     Tags.of(this).add("Environment", this.environment);
-    Tags.of(this).add("Name", id);
+    Tags.of(this).add("Name", `${this.project}-${this.environment}-${id}`);
   }
 }
