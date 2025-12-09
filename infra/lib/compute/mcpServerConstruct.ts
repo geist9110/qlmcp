@@ -62,7 +62,7 @@ export class McpServerConstruct extends BaseConstruct {
       vpcSubnets: {
         subnetType: ec2.SubnetType.PUBLIC,
       },
-      securityGroup: props.mainServerSecurityGroup,
+      securityGroup: this.securityGroup,
       role: this.role,
     });
   }
