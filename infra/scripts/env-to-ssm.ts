@@ -6,20 +6,7 @@ const [, , modeArg] = process.argv;
 type Mode = "dev" | "prod";
 const mode: Mode = modeArg === "prod" ? "prod" : "dev";
 
-// NOTE:
-// The SSM parameter prefix is intentionally fixed to the production path (/qlmcp/prod).
-//
-// Reasoning:
-// - The application only reads configuration from the production SSM namespace.
-// - In local development, we mirror the same production namespace using LocalStack,
-//   so all test writes also go to `/qlmcp/prod` but through the LocalStack endpoint.
-// - Therefore, unlike typical multi-stage setups (dev/stage/prod), the SSM path
-//   remains constant, and only the target endpoint (AWS vs LocalStack) changes.
-//
-// Important:
-// - Be cautious when running in `prod` mode because it writes to the actual
-//   AWS Parameter Store at `/qlmcp/prod`. Always double-check the env file.
-const prefix = "/qlmcp/prod";
+const prefix = `/qlmcp/${mode}`;
 const filePath = path.join(__dirname, "..", "env", `.env.${mode}`);
 const awsRegion = process.env.AWS_REGION ?? "us-east-1";
 const ssm = new SSMClient(
