@@ -1,5 +1,5 @@
-import { Stack, StackProps, Tags } from "aws-cdk-lib";
-import { Construct, IConstruct } from "constructs";
+import { Stack, StackProps } from "aws-cdk-lib";
+import { Construct } from "constructs";
 import { MainServerConstruct } from "./compute/mainServerConstruct";
 import { McpServerConstruct } from "./compute/mcpServerConstruct";
 import { BaseConstructProps } from "./core/baseConstruct";
@@ -44,11 +44,5 @@ export class InfraStack extends Stack {
       vpc: this.network.vpc,
       mainServerSecurityGroup: this.mainServer.securityGroup,
     });
-  }
-
-  private addTags(resource: IConstruct, name: string) {
-    Tags.of(resource).add("Name", name);
-    Tags.of(resource).add("Project", "qlmcp");
-    Tags.of(resource).add("Environment", this.env);
   }
 }
