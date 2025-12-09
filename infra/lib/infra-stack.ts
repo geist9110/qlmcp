@@ -1,5 +1,4 @@
 import {
-  Duration,
   RemovalPolicy,
   SecretValue,
   Stack,
@@ -9,12 +8,12 @@ import {
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import { SecurityGroup } from "aws-cdk-lib/aws-ec2";
 import * as rds from "aws-cdk-lib/aws-rds";
-import * as route53 from "aws-cdk-lib/aws-route53";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import { Construct, IConstruct } from "constructs";
 import { MainServerConstruct } from "./compute/mainServerConstruct";
 import { McpServerConstruct } from "./compute/mcpServerConstruct";
 import { BaseConstructProps } from "./core/baseConstruct";
+import { DnsConstruct } from "./dns/dnsConstruct";
 import { NetworkConstruct } from "./network/networkConstruct";
 
 export class InfraStack extends Stack {
@@ -22,6 +21,7 @@ export class InfraStack extends Stack {
   public readonly network: NetworkConstruct;
   public readonly mainServer: MainServerConstruct;
   public readonly mcpServer: McpServerConstruct;
+  public readonly dns: DnsConstruct;
   public readonly database: rds.DatabaseInstance;
 
   constructor(
@@ -50,17 +50,10 @@ export class InfraStack extends Stack {
       mainServerSecurityGroup: this.mainServer.securityGroup,
     });
 
-    const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
-      domainName: domainName,
-    });
-    new route53.ARecord(this, "McpSubdomainRecord", {
-      zone: hostedZone,
-      recordName: "mcp",
-      target: route53.RecordTarget.fromIpAddresses(
-        this.mainServer.instance.instancePublicIp,
-      ),
-      ttl: Duration.minutes(5),
-      comment: "Route mcp subdomain to main server",
+    this.dns = new DnsConstruct(this, "dns", {
+      ...common,
+      domainName: "qlmcp.com",
+      mainServerIp: this.mainServer.instance.instancePublicIp,
     });
 
     // SSM Parameter store
