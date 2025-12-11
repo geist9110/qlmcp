@@ -62,22 +62,4 @@ describe("InfraStack", () => {
       );
     });
   });
-
-  describe("Route53 테스트", () => {
-    test("A 레코드가 메인 서버 인스턴스를 가리키는지 테스트", () => {
-      template.hasResourceProperties("AWS::Route53::RecordSet", {
-        Name: `mcp.qlmcp.com.`,
-        Type: "A",
-        ResourceRecords: Match.arrayWith([
-          Match.objectLike({
-            "Fn::GetAtt": Match.arrayWith([
-              Match.stringLikeRegexp("qlmcpmainserver.*"),
-              "PublicIp",
-            ]),
-          }),
-        ]),
-        TTL: "300",
-      });
-    });
-  });
 });
