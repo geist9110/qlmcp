@@ -3,7 +3,7 @@ import { Match, Template } from "aws-cdk-lib/assertions";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import { DnsConstruct } from "../../lib/dns/dnsConstruct";
 
-describe("MainServerConstruct", () => {
+describe("DnsConstruct Test", () => {
   let app: cdk.App;
   let stack: cdk.Stack;
   let template: Template;
