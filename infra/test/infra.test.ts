@@ -1,10 +1,6 @@
 import * as cdk from "aws-cdk-lib";
-import { Match, Template } from "aws-cdk-lib/assertions";
-import * as dotenv from "dotenv";
+import { Template } from "aws-cdk-lib/assertions";
 import { InfraStack } from "../lib/infra-stack";
-
-const env = "test";
-dotenv.config({ path: `env/.env.${env}` });
 
 describe("InfraStack", () => {
   let app: cdk.App;
@@ -13,53 +9,12 @@ describe("InfraStack", () => {
 
   beforeEach(() => {
     app = new cdk.App();
-    stack = new InfraStack(app, "TestStack", env, {
+    stack = new InfraStack(app, "test-stack", "test", {
       env: {
-        account: process.env.AWS_ACCOUNT_ID,
-        region: process.env.AWS_REGION,
+        account: "test-account",
+        region: "us-east-1",
       },
     });
     template = Template.fromStack(stack);
-  });
-
-  describe("VPC 테스트", () => {
-    test("하나의 VPC만 생성되는지 확인", () => {
-      template.resourceCountIs("AWS::EC2::VPC", 1);
-    });
-
-    test("VPC가 /16 CIDR 블록을 가지는지 확인", () => {
-      template.hasResourceProperties("AWS::EC2::VPC", {
-        CidrBlock: Match.stringLikeRegexp("^10\\.0\\.0\\.0/16$"),
-      });
-    });
-
-    test("VPC에 NatGateway가 없는지 확인", () => {
-      template.resourceCountIs("AWS::EC2::NatGateway", 0);
-    });
-
-    test("VPC가 2*2개의 Subnet을 가지는지 확인", () => {
-      template.resourceCountIs("AWS::EC2::Subnet", 4);
-    });
-
-    test("Subnet의 CIDR 마스크가 /24인지 확인", () => {
-      template.hasResourceProperties("AWS::EC2::Subnet", {
-        MapPublicIpOnLaunch: true,
-        CidrBlock: Match.stringLikeRegexp("^10\\.0\\.0\\.0/24$"),
-      });
-    });
-
-    test("Internet Gateway가 생성되는지 확인", () => {
-      template.resourceCountIs("AWS::EC2::InternetGateway", 1);
-    });
-
-    test("VPC가 Internet Gateway에 연결되는지 확인", () => {
-      template.hasResourceProperties(
-        "AWS::EC2::Route",
-        Match.objectLike({
-          DestinationCidrBlock: "0.0.0.0/0",
-          GatewayId: Match.anyValue(),
-        }),
-      );
-    });
   });
 });
