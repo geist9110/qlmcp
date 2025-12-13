@@ -12,12 +12,14 @@ spring:
       - classpath:application-config.yml
 
   profiles:
-    active: dev
+    default: dev
 ---
 spring:
   config:
     activate:
       on-profile: dev
+    import:
+      - optional:file:.env[.properties]
 ---
 spring:
   config:
