@@ -27,26 +27,3 @@ spring:
       on-profile: prod
     import:
       - aws-parameterstore:/qlmcp/${PARAM_ENV:prod}/backend/
----
-spring:
-  config:
-    activate:
-      on-profile: test
-  ai:
-    openai:
-      api-key: test-API-key
-      base-url: http://test-api-url
-
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            client-id: test-github-clinet-id
-            client-secret: test-github-clinet-secret
-          google:
-            client-id: test-google-client-id
-            client-secret: test-google-client-secret
-
-jwt:
-  secret: this-is-jwt-secret-this-is-jwt-secret-this-is-jwt-secret
