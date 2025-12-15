@@ -21,8 +21,18 @@ export class LoadBalancerConstruct extends BaseConstruct {
     super(scope, id, props);
 
     this.securityGroup = this.createSecurityGroup(props);
-    this.targetGroup = this.createTargetGroup(props);
-    this.loadBalancer = this.createApplicationLoadBalancer(props);
+    this.targetGroup = this.createTargetGroup(props, this.securityGroup);
+    this.loadBalancer = this.createApplicationLoadBalancer(
+      props,
+      this.securityGroup,
+    );
+
+    this.addHttpListener(this.loadBalancer);
+    this.addHttpsListener(
+      this.loadBalancer,
+      this.targetGroup,
+      props.certification,
+    );
   }
 
   private createSecurityGroup(
@@ -60,10 +70,11 @@ export class LoadBalancerConstruct extends BaseConstruct {
 
   private createTargetGroup(
     props: LoadBalancerConstructProps,
+    securityGroup: ec2.SecurityGroup,
   ): elbv2.ApplicationTargetGroup {
     const mainServerPort = 8080;
     props.mainServerInstance.connections.allowFrom(
-      this.securityGroup,
+      securityGroup,
       ec2.Port.tcp(mainServerPort),
     );
 
@@ -83,6 +94,7 @@ export class LoadBalancerConstruct extends BaseConstruct {
 
   private createApplicationLoadBalancer(
     props: LoadBalancerConstructProps,
+    securityGroup: ec2.SecurityGroup,
   ): elbv2.ApplicationLoadBalancer {
     const applicationLoadBalancer = new elbv2.ApplicationLoadBalancer(
       this,
@@ -90,12 +102,16 @@ export class LoadBalancerConstruct extends BaseConstruct {
       {
         vpc: props.vpc,
         internetFacing: true,
-        securityGroup: this.securityGroup,
+        securityGroup: securityGroup,
         loadBalancerName: `${props.project}-${props.envName}-alb`,
       },
     );
 
-    applicationLoadBalancer
+    return applicationLoadBalancer;
+  }
+
+  private addHttpListener(loadBalancer: elbv2.ApplicationLoadBalancer): void {
+    loadBalancer
       .addListener("http", {
         port: 80,
         protocol: elbv2.ApplicationProtocol.HTTP,
@@ -108,15 +124,19 @@ export class LoadBalancerConstruct extends BaseConstruct {
           permanent: true,
         }),
       });
+  }
 
-    applicationLoadBalancer.addListener("https", {
+  private addHttpsListener(
+    loadBalancer: elbv2.ApplicationLoadBalancer,
+    targetGroup: elbv2.ApplicationTargetGroup,
+    certification: acm.ICertificate,
+  ): void {
+    loadBalancer.addListener("https", {
       port: 443,
       protocol: elbv2.ApplicationProtocol.HTTPS,
       open: true,
-      defaultTargetGroups: [this.targetGroup],
-      certificates: [props.certification],
+      defaultTargetGroups: [targetGroup],
+      certificates: [certification],
     });
-
-    return applicationLoadBalancer;
   }
 }
