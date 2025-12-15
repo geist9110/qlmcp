@@ -40,7 +40,6 @@ export class DnsConstruct extends BaseConstruct {
   private createCertificate(props: DnsConstructProps): acm.ICertificate {
     return new acm.Certificate(this, "certificate", {
       domainName: "mcp." + props.domainName,
-      subjectAlternativeNames: [`*.${props.domainName}`],
       validation: acm.CertificateValidation.fromDns(this.hostedZone),
     });
   }
