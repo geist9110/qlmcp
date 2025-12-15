@@ -29,24 +29,6 @@ export class MainServerConstruct extends BaseConstruct {
       securityGroupName: `${props.project}-${props.envName}-main-server-security-group`,
     });
 
-    securityGroup.addIngressRule(
-      ec2.Peer.anyIpv4(),
-      ec2.Port.tcp(443),
-      "Allow HTTPS traffic from anywhere(IPv4)",
-    );
-
-    securityGroup.addIngressRule(
-      ec2.Peer.anyIpv6(),
-      ec2.Port.tcp(443),
-      "Allow HTTPS traffic from anywhere(IPv6)",
-    );
-
-    securityGroup.addIngressRule(
-      ec2.Peer.anyIpv4(),
-      ec2.Port.tcp(80),
-      "Allow HTTP traffic from anywhere(IPv4)",
-    );
-
     return securityGroup;
   }
 

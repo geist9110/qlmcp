@@ -51,26 +51,6 @@ describe("MainServerConstruct test", () => {
     template.hasResourceProperties(
       ec2.CfnSecurityGroup.CFN_RESOURCE_TYPE_NAME,
       {
-        SecurityGroupIngress: Match.arrayWith([
-          Match.objectLike({
-            IpProtocol: "tcp",
-            FromPort: 443,
-            ToPort: 443,
-            CidrIp: "0.0.0.0/0",
-          }),
-          Match.objectLike({
-            IpProtocol: "tcp",
-            FromPort: 443,
-            ToPort: 443,
-            CidrIpv6: "::/0",
-          }),
-          Match.objectLike({
-            IpProtocol: "tcp",
-            FromPort: 80,
-            ToPort: 80,
-            CidrIp: "0.0.0.0/0",
-          }),
-        ]),
         SecurityGroupEgress: Match.arrayWith([
           Match.objectLike({
             IpProtocol: "-1",
