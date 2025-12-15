@@ -24,9 +24,12 @@ export class InfraStack extends Stack {
 
     this.network = new NetworkConstruct(this, `network`, common);
 
+    this.cicd = new CiCdConstruct(this, "cicd", common);
+
     this.mainServer = new MainServerConstruct(this, "main-server", {
       ...common,
       vpc: this.network.vpc,
+      buildArtifactBucket: this.cicd.buildArtifactStorage,
     });
 
     this.mcpServer = new McpServerConstruct(this, "mcp-server", {
@@ -46,8 +49,6 @@ export class InfraStack extends Stack {
       vpc: this.network.vpc,
       mainServerSecurityGroup: this.mainServer.securityGroup,
     });
-
-    this.cicd = new CiCdConstruct(this, "cicd", common);
 
     this.loadBalancer = new LoadBalancerConstruct(this, "load-balancer", {
       ...common,

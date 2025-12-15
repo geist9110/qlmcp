@@ -1,10 +1,12 @@
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 import { BaseConstruct, BaseConstructProps } from "../core/baseConstruct";
 
 interface MainServerConstructProps extends BaseConstructProps {
   vpc: ec2.Vpc;
+  buildArtifactBucket: s3.Bucket;
 }
 
 export class MainServerConstruct extends BaseConstruct {
@@ -16,7 +18,7 @@ export class MainServerConstruct extends BaseConstruct {
     super(scope, id, props);
 
     this.securityGroup = this.createSecurityGroup(props);
-    this.role = this.createRole();
+    this.role = this.createRole(props);
     this.instance = this.createInstance(props);
   }
 
@@ -32,16 +34,18 @@ export class MainServerConstruct extends BaseConstruct {
     return securityGroup;
   }
 
-  private createRole(): iam.Role {
-    return new iam.Role(this, "role", {
+  private createRole(props: MainServerConstructProps): iam.Role {
+    const role = new iam.Role(this, "role", {
       assumedBy: new iam.ServicePrincipal("ec2.amazonaws.com"),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName(
           "AmazonSSMManagedInstanceCore",
         ),
-        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonS3ReadOnlyAccess"),
       ],
     });
+    props.buildArtifactBucket.grantRead(role);
+
+    return role;
   }
 
   private createInstance(props: MainServerConstructProps): ec2.Instance {

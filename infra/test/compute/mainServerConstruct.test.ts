@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import { Match, Template } from "aws-cdk-lib/assertions";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as s3 from "aws-cdk-lib/aws-s3";
 import { MainServerConstruct } from "../../lib/compute/mainServerConstruct";
 
 describe("MainServerConstruct test", () => {
@@ -9,6 +10,7 @@ describe("MainServerConstruct test", () => {
   let stack: cdk.Stack;
   let template: Template;
   let construct: MainServerConstruct;
+  let buildArtifactBucket: s3.Bucket;
 
   beforeEach(() => {
     app = new cdk.App();
@@ -19,10 +21,13 @@ describe("MainServerConstruct test", () => {
       natGateways: 0,
     });
 
+    buildArtifactBucket = new s3.Bucket(stack, "test-s3");
+
     construct = new MainServerConstruct(stack, "main-server", {
       project: "qlmcp",
       envName: "test",
-      vpc,
+      vpc: vpc,
+      buildArtifactBucket: buildArtifactBucket,
     });
 
     template = Template.fromStack(stack);
@@ -83,17 +88,24 @@ describe("MainServerConstruct test", () => {
             ]),
           ]),
         }),
-        Match.objectLike({
-          "Fn::Join": Match.arrayWith([
-            "",
-            Match.arrayWith([
-              "arn:",
-              { Ref: "AWS::Partition" },
-              ":iam::aws:policy/AmazonS3ReadOnlyAccess",
-            ]),
-          ]),
-        }),
       ]),
+    });
+
+    template.hasResourceProperties(iam.CfnRole.CFN_RESOURCE_TYPE_NAME, {
+      ManagedPolicyArns: Match.not(
+        Match.arrayWith([
+          Match.objectLike({
+            "Fn::Join": Match.arrayWith([
+              "",
+              Match.arrayWith([
+                "arn:",
+                { Ref: "AWS::Partition" },
+                ":iam::aws:policy/AmazonS3ReadOnlyAccess",
+              ]),
+            ]),
+          }),
+        ]),
+      ),
     });
   });
 
@@ -105,5 +117,42 @@ describe("MainServerConstruct test", () => {
 
   test("[SUCCESS] instance role test", () => {
     expect(construct.instance.role).toEqual(construct.role);
+  });
+
+  test("[SUCCESS] S3 read is scoped to artifact bucket only", () => {
+    const roleLogicalId = stack.getLogicalId(
+      construct.role.node.defaultChild as iam.CfnRole,
+    );
+    const bucketLogicalId = stack.getLogicalId(
+      buildArtifactBucket.node.defaultChild as s3.CfnBucket,
+    );
+
+    template.hasResourceProperties(iam.CfnPolicy.CFN_RESOURCE_TYPE_NAME, {
+      Roles: Match.arrayWith([{ Ref: roleLogicalId }]),
+      PolicyDocument: {
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Effect: "Allow",
+            Action: ["s3:GetObject*", "s3:GetBucket*", "s3:List*"],
+            Resource: Match.arrayWith([
+              {
+                "Fn::GetAtt": Match.arrayWith([bucketLogicalId, "Arn"]),
+              },
+              {
+                "Fn::Join": Match.arrayWith([
+                  "",
+                  Match.arrayWith([
+                    {
+                      "Fn::GetAtt": Match.arrayWith([bucketLogicalId, "Arn"]),
+                    },
+                    "/*",
+                  ]),
+                ]),
+              },
+            ]),
+          }),
+        ]),
+      },
+    });
   });
 });
