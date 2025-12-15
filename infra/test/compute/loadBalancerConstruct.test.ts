@@ -3,6 +3,7 @@ import { Match, Template } from "aws-cdk-lib/assertions";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as s3 from "aws-cdk-lib/aws-s3";
 import { LoadBalancerConstruct } from "../../lib/compute/loadBalancerConstruct";
 import { MainServerConstruct } from "../../lib/compute/mainServerConstruct";
 
@@ -26,7 +27,8 @@ describe("load balancer test", () => {
     mainServer = new MainServerConstruct(stack, "main-server", {
       project: "qlmcp",
       envName: "test",
-      vpc,
+      vpc: vpc,
+      buildArtifactBucket: new s3.Bucket(stack, "test-bucket"),
     });
 
     certificate = acm.Certificate.fromCertificateArn(
