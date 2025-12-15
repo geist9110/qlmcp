@@ -6,7 +6,7 @@ import * as targets from "aws-cdk-lib/aws-elasticloadbalancingv2-targets";
 import { Construct } from "constructs";
 import { BaseConstruct, BaseConstructProps } from "../core/baseConstruct";
 
-interface LoadBalancerConstrutProps extends BaseConstructProps {
+interface LoadBalancerConstructProps extends BaseConstructProps {
   vpc: ec2.Vpc;
   mainServerInstance: ec2.Instance;
   certification: acm.ICertificate;
@@ -17,7 +17,7 @@ export class LoadBalancerConstruct extends BaseConstruct {
   public readonly securityGroup: ec2.SecurityGroup;
   public readonly targetGroup: elbv2.ApplicationTargetGroup;
 
-  constructor(scope: Construct, id: string, props: LoadBalancerConstrutProps) {
+  constructor(scope: Construct, id: string, props: LoadBalancerConstructProps) {
     super(scope, id, props);
 
     this.securityGroup = this.createSecurityGroup(props);
@@ -26,7 +26,7 @@ export class LoadBalancerConstruct extends BaseConstruct {
   }
 
   private createSecurityGroup(
-    props: LoadBalancerConstrutProps,
+    props: LoadBalancerConstructProps,
   ): ec2.SecurityGroup {
     const securityGroup = new ec2.SecurityGroup(this, "security-group", {
       vpc: props.vpc,
@@ -59,7 +59,7 @@ export class LoadBalancerConstruct extends BaseConstruct {
   }
 
   private createTargetGroup(
-    props: LoadBalancerConstrutProps,
+    props: LoadBalancerConstructProps,
   ): elbv2.ApplicationTargetGroup {
     const mainServerPort = 8080;
     props.mainServerInstance.connections.allowFrom(
@@ -82,7 +82,7 @@ export class LoadBalancerConstruct extends BaseConstruct {
   }
 
   private createApplicationLoadBalancer(
-    props: LoadBalancerConstrutProps,
+    props: LoadBalancerConstructProps,
   ): elbv2.ApplicationLoadBalancer {
     const applicationLoadBalancer = new elbv2.ApplicationLoadBalancer(
       this,
