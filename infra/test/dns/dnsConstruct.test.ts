@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { Match, Template } from "aws-cdk-lib/assertions";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import { DnsConstruct } from "../../lib/dns/dnsConstruct";
 
@@ -51,5 +52,18 @@ describe("DnsConstruct Test", () => {
         TTL: "300",
       },
     );
+  });
+
+  test("[SUCCESS] certificate issued via DNS validation in hosted zone", () => {
+    template.hasResourceProperties(acm.CfnCertificate.CFN_RESOURCE_TYPE_NAME, {
+      DomainName: "mcp." + domainName,
+      ValidationMethod: "DNS",
+      DomainValidationOptions: Match.arrayWith([
+        Match.objectLike({
+          DomainName: "mcp." + domainName,
+          HostedZoneId: hostedZoneId,
+        }),
+      ]),
+    });
   });
 });
