@@ -83,7 +83,9 @@ export class LoadBalancerConstruct extends BaseConstruct {
       port: mainServerPort,
       protocol: elbv2.ApplicationProtocol.HTTP,
       targetType: elbv2.TargetType.INSTANCE,
-      targets: [new targets.InstanceTarget(props.mainServerInstance, 8080)],
+      targets: [
+        new targets.InstanceTarget(props.mainServerInstance, mainServerPort),
+      ],
       healthCheck: {
         protocol: elbv2.Protocol.HTTP,
         path: "/actuator/health",
