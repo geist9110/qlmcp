@@ -1,8 +1,10 @@
 import { Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
+import { LoadBalancerConstruct } from "./compute/loadBalancerConstruct";
 import { MainServerConstruct } from "./compute/mainServerConstruct";
 import { McpServerConstruct } from "./compute/mcpServerConstruct";
 import { BaseConstructProps } from "./core/baseConstruct";
+import { CiCdConstruct } from "./data/cicdConstruct";
 import { DatabaseConstruct } from "./data/databaseConstruct";
 import { DnsConstruct } from "./dns/dnsConstruct";
 import { NetworkConstruct } from "./network/networkConstruct";
@@ -13,6 +15,8 @@ export class InfraStack extends Stack {
   public readonly mcpServer: McpServerConstruct;
   public readonly dns: DnsConstruct;
   public readonly database: DatabaseConstruct;
+  public readonly cicd: CiCdConstruct;
+  public readonly loadBalancer: LoadBalancerConstruct;
 
   constructor(scope: Construct, id: string, env: string, props?: StackProps) {
     super(scope, id, props);
@@ -20,9 +24,12 @@ export class InfraStack extends Stack {
 
     this.network = new NetworkConstruct(this, `network`, common);
 
+    this.cicd = new CiCdConstruct(this, "cicd", common);
+
     this.mainServer = new MainServerConstruct(this, "main-server", {
       ...common,
       vpc: this.network.vpc,
+      buildArtifactBucket: this.cicd.buildArtifactStorage,
     });
 
     this.mcpServer = new McpServerConstruct(this, "mcp-server", {
@@ -41,6 +48,13 @@ export class InfraStack extends Stack {
       ...common,
       vpc: this.network.vpc,
       mainServerSecurityGroup: this.mainServer.securityGroup,
+    });
+
+    this.loadBalancer = new LoadBalancerConstruct(this, "load-balancer", {
+      ...common,
+      vpc: this.network.vpc,
+      mainServerInstance: this.mainServer.instance,
+      certification: this.dns.certificate,
     });
   }
 }
