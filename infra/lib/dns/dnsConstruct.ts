@@ -1,5 +1,3 @@
-import { Duration } from "aws-cdk-lib";
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import { LoadBalancerTarget } from "aws-cdk-lib/aws-route53-targets";
@@ -25,7 +23,6 @@ export class DnsConstruct extends BaseConstruct {
       target: route53.RecordTarget.fromAlias(
         new LoadBalancerTarget(props.loadBalancer),
       ),
-      ttl: Duration.minutes(5),
       comment: "Route mcp subdomain to Application LoadBalancer",
     });
   }
