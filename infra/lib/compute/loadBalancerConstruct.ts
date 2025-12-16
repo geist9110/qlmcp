@@ -3,19 +3,22 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as targets from "aws-cdk-lib/aws-elasticloadbalancingv2-targets";
+import * as route53 from "aws-cdk-lib/aws-route53";
 import { Construct } from "constructs";
 import { BaseConstruct, BaseConstructProps } from "../core/baseConstruct";
 
 interface LoadBalancerConstructProps extends BaseConstructProps {
   vpc: ec2.Vpc;
   mainServerInstance: ec2.Instance;
-  certification: acm.ICertificate;
+  domainName: string;
+  hostedZone: route53.IHostedZone;
 }
 
 export class LoadBalancerConstruct extends BaseConstruct {
   public readonly loadBalancer: elbv2.ApplicationLoadBalancer;
   public readonly securityGroup: ec2.SecurityGroup;
   public readonly targetGroup: elbv2.ApplicationTargetGroup;
+  public readonly certificate: acm.ICertificate;
 
   constructor(scope: Construct, id: string, props: LoadBalancerConstructProps) {
     super(scope, id, props);
@@ -26,12 +29,12 @@ export class LoadBalancerConstruct extends BaseConstruct {
       props,
       this.securityGroup,
     );
-
+    this.certificate = this.createCertificate(props);
     this.addHttpListener(this.loadBalancer);
     this.addHttpsListener(
       this.loadBalancer,
       this.targetGroup,
-      props.certification,
+      this.certificate,
     );
   }
 
@@ -139,6 +142,15 @@ export class LoadBalancerConstruct extends BaseConstruct {
       open: true,
       defaultTargetGroups: [targetGroup],
       certificates: [certification],
+    });
+  }
+
+  private createCertificate(
+    props: LoadBalancerConstructProps,
+  ): acm.ICertificate {
+    return new acm.Certificate(this, "certificate", {
+      domainName: "mcp." + props.domainName,
+      validation: acm.CertificateValidation.fromDns(props.hostedZone),
     });
   }
 }

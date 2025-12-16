@@ -1,6 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import { Match, Template } from "aws-cdk-lib/assertions";
-import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import { DnsConstruct } from "../../lib/dns/dnsConstruct";
 
@@ -9,21 +10,10 @@ describe("DnsConstruct Test", () => {
   let stack: cdk.Stack;
   let template: Template;
   let construct: DnsConstruct;
-  const mainServerIp: string = "111.111.111.111";
-
-  const hostedZoneId: string = "test-hosted-zone-id";
   const domainName: string = "test.com";
 
   beforeEach(() => {
     app = new cdk.App();
-    app.node.setContext(
-      `hosted-zone:account=test-account:domainName=${domainName}:region=us-east-1`,
-      {
-        Id: hostedZoneId,
-        Name: domainName,
-        CallerReference: "dummy",
-      },
-    );
     stack = new cdk.Stack(app, "test-stack", {
       env: {
         account: "test-account",
@@ -31,39 +21,49 @@ describe("DnsConstruct Test", () => {
       },
     });
 
+    const vpc = new ec2.Vpc(stack, "test-vpc", { maxAzs: 2 });
+    const loadBalancer = new elbv2.ApplicationLoadBalancer(stack, "test-alb", {
+      vpc,
+      internetFacing: true,
+    });
+
+    const hostedZone = new route53.PublicHostedZone(stack, "test-hosted-zone", {
+      zoneName: domainName,
+    });
+
     construct = new DnsConstruct(stack, "test-dns-construct", {
       project: "qlmcp",
       envName: "test",
-      domainName: domainName,
-      mainServerIp: mainServerIp,
+      hostedZone,
+      loadBalancer,
     });
 
     template = Template.fromStack(stack);
   });
 
-  test("[SUCCESS] record test", () => {
+  test("[SUCCESS] creates alias A record for mcp subdomain", () => {
     template.hasResourceProperties(
       route53.CfnRecordSet.CFN_RESOURCE_TYPE_NAME,
       {
-        HostedZoneId: hostedZoneId,
         Name: `mcp.${domainName}.`,
         Type: "A",
-        ResourceRecords: Match.arrayWith([mainServerIp]),
-        TTL: "300",
+        AliasTarget: {
+          DNSName: Match.objectLike({
+            "Fn::Join": Match.arrayWith([
+              "",
+              Match.arrayWith([
+                Match.stringLikeRegexp("dualstack\\..*"),
+                Match.objectLike({
+                  "Fn::GetAtt": [Match.anyValue(), "DNSName"],
+                }),
+              ]),
+            ]),
+          }),
+          HostedZoneId: Match.objectLike({
+            "Fn::GetAtt": [Match.anyValue(), "CanonicalHostedZoneID"],
+          }),
+        },
       },
     );
-  });
-
-  test("[SUCCESS] certificate issued via DNS validation in hosted zone", () => {
-    template.hasResourceProperties(acm.CfnCertificate.CFN_RESOURCE_TYPE_NAME, {
-      DomainName: "mcp." + domainName,
-      ValidationMethod: "DNS",
-      DomainValidationOptions: Match.arrayWith([
-        Match.objectLike({
-          DomainName: "mcp." + domainName,
-          HostedZoneId: hostedZoneId,
-        }),
-      ]),
-    });
   });
 });
