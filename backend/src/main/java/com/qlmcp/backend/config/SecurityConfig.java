@@ -2,14 +2,16 @@ package com.qlmcp.backend.config;
 
 import com.qlmcp.backend.config.McpConfig.MCPAuthenticationEntryPoint;
 import com.qlmcp.backend.service.CustomOAuth2UserService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Configuration
@@ -27,6 +29,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         authorize -> authorize
+                                // Health Check
+                                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+
                                 // Well known
                                 .requestMatchers("/.well-known/**").permitAll()
 
