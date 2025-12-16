@@ -26,4 +26,8 @@ spring:
     activate:
       on-profile: prod
     import:
-      - aws-parameterstore:/qlmcp/${PARAM_ENV:prod}/backend/
+      - aws-parameterstore:/qlmcp/${PARAM_ENV:prod}/backend/ai/
+      - aws-parameterstore:/qlmcp/${PARAM_ENV:prod}/backend/config/
+      - aws-parameterstore:/qlmcp/${PARAM_ENV:prod}/backend/database/
+      - aws-parameterstore:/qlmcp/${PARAM_ENV:prod}/backend/mcpServer/
+      - aws-parameterstore:/qlmcp/${PARAM_ENV:prod}/backend/security/
