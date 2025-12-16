@@ -42,11 +42,11 @@ export class DatabaseConstruct extends BaseConstruct {
     const databaseUserName = ssm.StringParameter.fromStringParameterName(
       this,
       "database-user-name",
-      `/qlmcp/${props.envName}/infra/database/username`,
+      `/qlmcp/${props.envName}/infra/database/DB_USER`,
     ).stringValue;
 
     const databasePassword = SecretValue.ssmSecure(
-      `/qlmcp/${props.envName}/infra/database/password`,
+      `/qlmcp/${props.envName}/infra/database/DB_PASSWORD`,
     );
 
     return new rds.DatabaseInstance(this, "database", {
