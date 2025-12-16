@@ -1,3 +1,4 @@
+import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -44,6 +45,22 @@ export class MainServerConstruct extends BaseConstruct {
       ],
     });
     props.buildArtifactBucket.grantRead(role);
+
+    const region = cdk.Stack.of(this).region;
+    const account = cdk.Stack.of(this).account;
+    const prefix = `/${props.project}/${props.envName}/backend`;
+
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath",
+        ],
+        resources: [`arn:aws:ssm:${region}:${account}:parameter${prefix}*`],
+      }),
+    );
 
     return role;
   }

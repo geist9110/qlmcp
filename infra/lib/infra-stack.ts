@@ -7,6 +7,7 @@ import { BaseConstructProps } from "./core/baseConstruct";
 import { CiCdConstruct } from "./data/cicdConstruct";
 import { DatabaseConstruct } from "./data/databaseConstruct";
 import { DnsConstruct } from "./dns/dnsConstruct";
+import { ZoneConstruct } from "./dns/zoneConstruct";
 import { NetworkConstruct } from "./network/networkConstruct";
 
 export class InfraStack extends Stack {
@@ -17,10 +18,12 @@ export class InfraStack extends Stack {
   public readonly database: DatabaseConstruct;
   public readonly cicd: CiCdConstruct;
   public readonly loadBalancer: LoadBalancerConstruct;
+  public readonly zone: ZoneConstruct;
 
   constructor(scope: Construct, id: string, env: string, props?: StackProps) {
     super(scope, id, props);
     const common: BaseConstructProps = { envName: env, project: "qlmcp" };
+    const domainName: string = "qlmcp.com";
 
     this.network = new NetworkConstruct(this, `network`, common);
 
@@ -38,23 +41,29 @@ export class InfraStack extends Stack {
       mainServerSecurityGroup: this.mainServer.securityGroup,
     });
 
-    this.dns = new DnsConstruct(this, "dns", {
+    this.zone = new ZoneConstruct(this, "zone", {
       ...common,
-      domainName: "qlmcp.com",
-      mainServerIp: this.mainServer.instance.instancePublicIp,
-    });
-
-    this.database = new DatabaseConstruct(this, "database", {
-      ...common,
-      vpc: this.network.vpc,
-      mainServerSecurityGroup: this.mainServer.securityGroup,
+      domainName: domainName,
     });
 
     this.loadBalancer = new LoadBalancerConstruct(this, "load-balancer", {
       ...common,
       vpc: this.network.vpc,
       mainServerInstance: this.mainServer.instance,
-      certification: this.dns.certificate,
+      hostedZone: this.zone.hostedZone,
+      domainName: domainName,
+    });
+
+    this.dns = new DnsConstruct(this, "dns", {
+      ...common,
+      hostedZone: this.zone.hostedZone,
+      loadBalancer: this.loadBalancer.loadBalancer,
+    });
+
+    this.database = new DatabaseConstruct(this, "database", {
+      ...common,
+      vpc: this.network.vpc,
+      mainServerSecurityGroup: this.mainServer.securityGroup,
     });
   }
 }

@@ -3,6 +3,7 @@ import { Match, Template } from "aws-cdk-lib/assertions";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as elbv2 from "aws-cdk-lib/aws-elasticloadbalancingv2";
+import * as route53 from "aws-cdk-lib/aws-route53";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { LoadBalancerConstruct } from "../../lib/compute/loadBalancerConstruct";
 import { MainServerConstruct } from "../../lib/compute/mainServerConstruct";
@@ -13,7 +14,8 @@ describe("load balancer test", () => {
   let template: Template;
   let mainServer: MainServerConstruct;
   let construct: LoadBalancerConstruct;
-  let certificate: acm.ICertificate;
+  const domainName = "test.com";
+  let hostedZone: route53.IPublicHostedZone;
 
   beforeEach(() => {
     app = new cdk.App();
@@ -31,18 +33,17 @@ describe("load balancer test", () => {
       buildArtifactBucket: new s3.Bucket(stack, "test-bucket"),
     });
 
-    certificate = acm.Certificate.fromCertificateArn(
-      stack,
-      "test-cert",
-      "arn:aws:acm:us-east-1:123456789012:certificate/test",
-    );
+    hostedZone = new route53.PublicHostedZone(stack, "test-hosted-zone", {
+      zoneName: domainName,
+    });
 
     construct = new LoadBalancerConstruct(stack, "load-balancer-test", {
       project: "qlmcp",
       envName: "test",
       vpc: vpc,
       mainServerInstance: mainServer.instance,
-      certification: certificate,
+      domainName,
+      hostedZone,
     });
 
     template = Template.fromStack(stack);
@@ -88,7 +89,7 @@ describe("load balancer test", () => {
       Protocol: "HTTPS",
       Certificates: Match.arrayWith([
         Match.objectLike({
-          CertificateArn: "arn:aws:acm:us-east-1:123456789012:certificate/test",
+          CertificateArn: { Ref: Match.stringLikeRegexp("certificate") },
         }),
       ]),
       DefaultActions: Match.arrayWith([
@@ -144,5 +145,23 @@ describe("load balancer test", () => {
         },
       },
     );
+  });
+
+  test("[SUCCESS] Certificate issued via DNS validation", () => {
+    const hostedZoneLogicalId = stack.getLogicalId(
+      (hostedZone as route53.PublicHostedZone).node
+        .defaultChild as route53.CfnHostedZone,
+    );
+
+    template.hasResourceProperties(acm.CfnCertificate.CFN_RESOURCE_TYPE_NAME, {
+      DomainName: `mcp.${domainName}`,
+      ValidationMethod: "DNS",
+      DomainValidationOptions: Match.arrayWith([
+        Match.objectLike({
+          DomainName: `mcp.${domainName}`,
+          HostedZoneId: { Ref: hostedZoneLogicalId },
+        }),
+      ]),
+    });
   });
 });

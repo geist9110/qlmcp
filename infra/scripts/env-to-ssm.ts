@@ -64,7 +64,7 @@ async function sendToSSM(envFiles: string[]): Promise<void> {
         continue;
       }
 
-      const name = `qlmcp/${environment}${dirPrefix}/${key}`;
+      const name = `/qlmcp/${environment}${dirPrefix}/${key}`;
       const isSecret = /(PASSWORD|SECRET|API_KEY|TOKEN)/i.test(key);
 
       const command = new PutParameterCommand({
