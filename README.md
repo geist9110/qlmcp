@@ -12,7 +12,7 @@ QLMCP는 파편화된 MCP 도구들을 하나로 묶어, AI가 자연어만으�
 
 1. **번거로운 등록**: 새로운 기능을 쓸 때마다 매번 MCP 서버 주소를 찾고 설정 파일을 수정해야 합니다.
 
-2. **복잡한 판단**: "이 질문엔 어떤 도구를 써야 하지?"를 사용자가 고민해야합니다.
+2. **복잡한 판단**: "이 질문엔 어떤 도구를 써야 하지?"를 사용자가 고민해야 합니다.
 
 3. **환경의 제약**: AI 서비스를 바꿀 때마다 공들여 쌓은 MCP 환경을 다시 세팅해야 합니다.
 
@@ -32,7 +32,7 @@ QLMCP는 모든 기능을 단 하나의 `query` 도구로 제공합니다.
 
 사용자는 그저 무엇을 원하는지만 말하면 됩니다.
 
-```JSON
+```json
 // 사용자 요청
 {
   "tool": "query",
@@ -42,7 +42,7 @@ QLMCP는 모든 기능을 단 하나의 `query` 도구로 제공합니다.
 }
 ```
 
-```JSON
+```json
 // Query 응답
 {
   "status": "success",
@@ -66,7 +66,7 @@ QLMCP가 필요한 정보만 요약해서 전달하므로, AI의 답변 속도�
 
 ---
 
-### ⚒️ 바로 사용 가능한 MCP 서버
+## ⚒️ 바로 사용 가능한 MCP 서버
 
 QLMCP 하나로 아래 서비스들을 즉시 사용할 수 있습니다.
 
@@ -85,7 +85,7 @@ QLMCP 하나로 아래 서비스들을 즉시 사용할 수 있습니다.
 > [!IMPORTANT] \
 > 현재 안정적인 서비스를 위해 **GitHub 로그인** 인증을 권장합니다.
 
-<details> <summary><b>Codex</b></summary>
+<details><summary><b>Codex</b></summary>
 
 ```bash
 codex mcp add qlmcp --url https://mcp.qlmcp.com/mcp
@@ -93,7 +93,7 @@ codex mcp add qlmcp --url https://mcp.qlmcp.com/mcp
 
 </details>
 
-<details> <summary><b>기타 환경</b></summary>
+<details><summary><b>기타 환경</b></summary>
 
 아래의 **HTTP 엔드포인트**를 직접 등록하여 사용하세요.
 
