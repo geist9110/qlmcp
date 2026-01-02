@@ -92,3 +92,12 @@ codex mcp add qlmcp --url https://mcp.qlmcp.com/mcp
 ```
 
 </details>
+
+<details> <summary><b>기타 환경</b></summary>
+
+아래의 **HTTP 엔드포인트**를 직접 등록하여 사용하세요.
+
+- **MCP Endpoint URL**: `https://mcp.qlmcp.com/mcp`
+- **Transport**: `HTTP(Streamable-HTTP)`
+
+</details>
