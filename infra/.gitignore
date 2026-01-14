@@ -9,4 +9,4 @@ cdk.out
 
 # Environment files
 cdk.context.json
-env/.env.development
+env/*

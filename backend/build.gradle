@@ -52,6 +52,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
     runtimeOnly 'com.mysql:mysql-connector-j'
 
+    // AWS
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-parameter-store:3.4.2'
+
     // Util dependencies
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
@@ -72,10 +75,27 @@ dependencyManagement {
 
 tasks.named('test') {
     outputs.dir snippetsDir
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
+}
+
+tasks.register('integrationTest', Test) {
+    description = 'Run integration tests.'
+    group = 'verification'
+
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+
+    shouldRunAfter tasks.named('test')
 }
 
 tasks.named('asciidoctor') {
     inputs.dir snippetsDir
     dependsOn test
+}
+
+bootJar {
+    archiveFileName = 'app.jar'
 }

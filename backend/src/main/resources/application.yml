@@ -12,43 +12,22 @@ spring:
       - classpath:application-config.yml
 
   profiles:
-    active: dev
+    default: dev
 ---
 spring:
   config:
     activate:
       on-profile: dev
+    import:
+      - optional:file:.env[.properties]
 ---
 spring:
   config:
     activate:
       on-profile: prod
----
-spring:
-  config:
-    activate:
-      on-profile: test
-  ai:
-    openai:
-      api-key: test-API-key
-      base-url: http://test-api-url
-      chat:
-        options:
-          prompt:
-            system-prompt: test-system-prompt
-            user-prompt-start: test-user-prompt-start
-            user-prompt-end: test-user-prompt-end
-            log-tag: <log>(.*?)</log>
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            client-id: test-github-clinet-id
-            client-secret: test-github-clinet-secret
-          google:
-            client-id: test-google-client-id
-            client-secret: test-google-client-secret
-
-jwt:
-  secret: this-is-jwt-secret-this-is-jwt-secret-this-is-jwt-secret
+    import:
+      - aws-parameterstore:/qlmcp/${PARAM_ENV:prod}/backend/ai/
+      - aws-parameterstore:/qlmcp/${PARAM_ENV:prod}/backend/config/
+      - aws-parameterstore:/qlmcp/${PARAM_ENV:prod}/backend/database/
+      - aws-parameterstore:/qlmcp/${PARAM_ENV:prod}/backend/mcpServer/
+      - aws-parameterstore:/qlmcp/${PARAM_ENV:prod}/backend/security/
